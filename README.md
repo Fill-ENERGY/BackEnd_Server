@@ -9,5 +9,4 @@
 | ✅ | :white_check_mark: | test | 테스트 코드, 리팩토링 테스트 코드 추가 |
 | 🚀 | :rocket: | chore | 패키지 매니저 수정 (Dockerfile, gradle, sh, yml) |
 | 🚑 | :ambulance: | !hotfix | 급하게 치명적인 버그를 고쳐야 하는 경우 |
-# spring-boot-java-template
 # BackEnd_Server
