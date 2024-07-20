@@ -69,7 +69,8 @@ jobs:
         port: ${{ secrets.EC2_SSH_PORT }}
         timeout: 60s
         script: |
-          sudo docker stop ${{ secrets.DOCKERHUB_IMAGENAME }}
-          sudo docker rm ${{ secrets.DOCKERHUB_IMAGENAME }}
+          CONTAINER_NAME=$(echo "${{ secrets.DOCKERHUB_IMAGENAME }}" | sed 's/[^a-zA-Z0-9_.-]/_/g')
+          sudo docker stop $CONTAINER_NAME || true
+          sudo docker rm $CONTAINER_NAME || true
           sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_IMAGENAME }}
-          sudo docker run -it -d -p 8080:8080 --name ${{ secrets.DOCKERHUB_IMAGENAME }} -e TZ=Asia/Seoul ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_IMAGENAME }}
+          sudo docker run -d -p 8080:8080 --name $CONTAINER_NAME -e TZ=Asia/Seoul ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_IMAGENAME }}
