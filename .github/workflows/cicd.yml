@@ -1,0 +1,75 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+name: Java CI with Gradle
+
+on:
+  push:
+    branches: [ "develop" ]
+  # pull_request:
+  #   branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # permissions:
+    #   contents: read
+
+    steps:
+    # - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    #setting jdk
+    - name: Set up JDK 17
+      uses: actions/setup-java@v2
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    #setting yml
+    - name: make application.yml
+      run: |
+        cd ./src/main/resources
+        touch ./application.yml
+        echo "${{ secrets.APPLICATION_YML}}" > ./application.yml
+
+    #gradlew chmod
+    - name: Grant execute permission for gradlew
+      run: chmod +x ./gradlew
+
+    #spring Boot Build
+    - name: Spring Boot Build
+      run: ./gradlew clean build -x test
+
+#----------------- Docker --------
+    #Docker Image build
+    - name: Docker Image Build
+      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_IMAGENAME }} .
+      
+    # DockerHub Login
+    - name: Docker Hub Login
+      uses: docker/login-action@v2 
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }} 
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+    # Docker Hub push
+    - name: docker Hub push
+      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_IMAGENAME }}
+
+#---------EC2----------
+    #AWS EC2 Server Connect & Docken 명령어 실행
+    - name: AWS EC2 Connection
+      uses: appleboy/ssh-action@v0.1.6 
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        password: ${{ secrets.EC2_PASSWORD }}
+        port: ${{ secrets.EC2_SSH_PORT }}
+        timeout: 60s
+        script: |
+          sudo docker stop ${{ secrets.DOCKERHUB_IMAGENAME }}
+          sudo docker rm ${{ secrets.DOCKERHUB_IMAGENAME }}
+          sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_IMAGENAME }}
+          sudo docker run -it -d -p 8080:8080 —name ${{ secrets.DOCKERHUB_IMAGENAME }} -e TZ=Asia/Seoul ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_IMAGENAME }
