@@ -3,6 +3,8 @@ package com.example.template.domain.station.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalTime;
+
 @Builder
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -26,25 +28,25 @@ public class Station {
     private double score;   // 평점
 
     @Column(name = "weekday_open")
-    private String weekdayOpen;     // 평일 운영 시작 시각
+    private LocalTime weekdayOpen;     // 평일 운영 시작 시각
 
     @Column(name = "weekday_close")
-    private String weekdayClose;    // 평일 운영 종료 시각
+    private LocalTime weekdayClose;    // 평일 운영 종료 시각
 
     @Column(name = "saturday_open")
-    private String saturdayOpen;    // 토요일 운영 시작 시각
+    private LocalTime saturdayOpen;    // 토요일 운영 시작 시각
 
     @Column(name = "saturday_close")
-    private String saturdayClose;   // 토요일 운영 종료 시각
+    private LocalTime saturdayClose;   // 토요일 운영 종료 시각
 
     @Column(name = "holiday_open")
-    private String holidayOpen;     // 공휴일 운영 시작 시각
+    private LocalTime holidayOpen;     // 공휴일 운영 시작 시각
 
     @Column(name = "holiday_close")
-    private String holidayClose;    // 공휴일 운영 종료 시각
+    private LocalTime holidayClose;    // 공휴일 운영 종료 시각
 
     @Column(name = "concurrent_usage_count")
-    private String concurrentUsageCount;    // 동시사용가능대수
+    private Integer concurrentUsageCount;    // 동시사용가능대수
 
     @Column(name = "air_injection_available")
     private boolean airInjectionAvailable;  // 공기주입가능여부
