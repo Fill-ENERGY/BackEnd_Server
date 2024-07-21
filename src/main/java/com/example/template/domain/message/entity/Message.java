@@ -28,13 +28,13 @@ public class Message extends BaseEntity {
     @Column(name = "read_status", nullable = false)
     private ReadStatus readStatus;  // 읽음 상태
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id")
-    private Member sender;
+    private Member sender;  // 보낸 사람
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "receiver_id")
-    private Member receiver;
+    private Member receiver;    // 받는 사람
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id")
