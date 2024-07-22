@@ -1,4 +1,4 @@
-*.yml
+application.yml
 # Mac os
 *.Ds_Store
 **/data/mysql/
