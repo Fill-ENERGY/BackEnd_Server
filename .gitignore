@@ -1,8 +1,7 @@
+*.yml
 # Mac os
 *.Ds_Store
-
-application.yml
-*.lock
+**/data/mysql/
 
 HELP.md
 .gradle
@@ -24,8 +23,7 @@ bin/
 !**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
-.idea/
-.idea/sonarlint
+.idea
 *.iws
 *.iml
 *.ipr
