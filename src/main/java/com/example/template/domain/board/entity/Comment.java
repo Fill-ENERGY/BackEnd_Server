@@ -27,6 +27,9 @@ public class Comment extends BaseEntity {
     @Column(name = "is_secret", nullable = false)
     private boolean isSecret;  // 비밀 여부
 
+    @Column(name = "is_author", nullable = false)
+    private boolean isAuthor;  // 글쓴이 인지 여부
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
