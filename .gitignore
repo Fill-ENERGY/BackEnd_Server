@@ -1,6 +1,9 @@
 # Mac os
 *.Ds_Store
 
+application.yml
+*.lock
+
 HELP.md
 .gradle
 build/
