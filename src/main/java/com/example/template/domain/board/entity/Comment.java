@@ -5,6 +5,9 @@ import com.example.template.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Builder
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -31,4 +34,12 @@ public class Comment extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id")
     private Board board;
+
+    // (대댓글 위해서) 자기 순환 참조
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Comment parent;
+
+    @OneToMany(mappedBy = "parent")
+    private List<Comment> children = new ArrayList<>();
 }
