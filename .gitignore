@@ -2,6 +2,7 @@
 *.Ds_Store
 
 application.yml
+*.lock
 
 HELP.md
 .gradle
