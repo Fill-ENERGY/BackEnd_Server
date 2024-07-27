@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -22,17 +23,18 @@ public class StationCommandServiceImpl implements StationCommandService {
 
     private final StationRepository stationRepository;
     private final WebClient webClient;
+    private final ObjectMapper objectMapper;
     @Value("${station.endpoint}")
     private String endpoint;
 
     @Override
-    @Scheduled(fixedDelay = 10000) // 10초마다 갱신
+    @Scheduled(fixedDelay = 3600000) // 1시간마다 갱신
     public void updateStations() {
         getStationsWithAPI();
     }
 
     /**
-     * 충전소 개수 가지고 오기
+     * 충전소 Open Api를 이용하여 갱신하기
      */
     private void getStationsWithAPI() {
         Mono<String> response = webClient
@@ -44,7 +46,6 @@ public class StationCommandServiceImpl implements StationCommandService {
         response.subscribe(
                 jsonResponse -> {
                     try {
-                        ObjectMapper objectMapper = new ObjectMapper();
                         JsonNode countNode = objectMapper.readTree(jsonResponse).path("tbElecWheelChrCharge").path("list_total_count");
                         getStations(countNode.asInt());
                     } catch (Exception e) {
@@ -54,54 +55,50 @@ public class StationCommandServiceImpl implements StationCommandService {
                 error -> {
                     log.error("충전소 개수 요청 도중 에러 발생");
                     log.error(error.getMessage());
-                },
-                () -> log.info("충전소 정보를 갱신하였습니다.")
+                }
         );
     }
 
+    /**
+     * 전체 충전소 정보를 가져오기
+     * @param count 미리 알아낸 총 충전소의 개수
+     */
     private void getStations(int count) {
         // 한 번에 5개씩만 요청 가능
-        for (int i = 0;  i <= count / 5; i++) {
-            Mono<String> response = webClient
-                    .get()
-                    .uri(endpoint + "/" + (5 * i + 1) + "/" + (5 * (i + 1)))
-                    .retrieve()
-                    .bodyToMono(String.class);
+        Flux<String> response = Flux.range(1, count / 5).flatMap(
+                index -> webClient
+                            .get()
+                            .uri(endpoint + "/" + (5 * index + 1) + "/" + (5 * (index + 1)))
+                            .retrieve()
+                            .bodyToMono(String.class)
+        );
 
-            response.subscribe(
-                    jsonResponse -> {
-                        try {
+        response.subscribe(
+                jsonResponse -> {
+                    try {
+                        JsonNode rows = objectMapper.readTree(jsonResponse).path("tbElecWheelChrCharge").path("row");
 
-                            ObjectMapper objectMapper = new ObjectMapper();
-                            JsonNode rows = objectMapper.readTree(jsonResponse).path("tbElecWheelChrCharge").path("row");
-
-                            if (rows.isArray()) {
-                                for (JsonNode data : rows) {
-                                    StationOpenApiResponse.StationResultDTO station = objectMapper.readValue(data.toString(), StationOpenApiResponse.StationResultDTO.class);
-                                    updateStation(station);
-                                }
-                            }
-                            else {
-                                StationOpenApiResponse.StationResultDTO station = objectMapper.readValue(rows.toString(), StationOpenApiResponse.StationResultDTO.class);
-                                updateStation(station);
-                            }
-                        } catch(Exception e) {
-                            log.error(e.getMessage());
+                        for (JsonNode row : rows) {
+                            StationOpenApiResponse.StationResultDTO station = objectMapper.readValue(row.toString(), StationOpenApiResponse.StationResultDTO.class);
+                            updateStation(station);
                         }
-                    },
-                    error -> {
-                        log.error("충전소 정보 갱신 도중 에러 발생");
-                        log.error(error.getMessage());
+                    } catch (Exception e) {
+                        log.error(e.getMessage());
                     }
-            );
-        }
+                },
+                error -> {
+                    log.error("충전소 정보 요청 도중 에러 발생");
+                    log.error(error.getMessage());
+                },
+                () -> log.info("충전소 정보를 갱신하였습니다.")
+
+        );
+
     }
 
     private void updateStation(StationOpenApiResponse.StationResultDTO stationDTO) {
         stationRepository.findByNameIsAndLatitudeIsAndLongitudeIs(stationDTO.getFCLTYNM(), stationDTO.getLATITUDE(), stationDTO.getLONGITUDE()).ifPresentOrElse(
-                found -> {
-                    found.update(stationDTO.toStation());
-                },
+                found -> found.update(stationDTO.toStation()),
                 () -> stationRepository.save(stationDTO.toStation())
         );
     }
