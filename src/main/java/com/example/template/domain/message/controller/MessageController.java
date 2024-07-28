@@ -10,6 +10,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
@@ -30,6 +32,13 @@ public class MessageController {
     public ApiResponse<MessageResponseDTO.MessageDTO> getMessage(@PathVariable(name = "messageId") Long messageId) {
         MessageResponseDTO.MessageDTO messageDTO= messageQueryService.getMessage(messageId);
         return ApiResponse.onSuccess(messageDTO);
+    }
+
+    @GetMapping("/threads")
+    @Operation(summary = "채팅방 목록 조회 API")
+    public ApiResponse<List<MessageResponseDTO.ThreadListDTO>> getThreadList() {
+        List<MessageResponseDTO.ThreadListDTO> threadListDTO= messageQueryService.getThreadList();
+        return ApiResponse.onSuccess(threadListDTO);
     }
 
     @PatchMapping("/messages/{messageId}")

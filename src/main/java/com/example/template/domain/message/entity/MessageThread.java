@@ -4,6 +4,9 @@ import com.example.template.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Builder
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -15,4 +18,7 @@ public class MessageThread extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "message_thread_id", nullable = false)
     private Long id;
+
+    @OneToMany(mappedBy = "messageThread")
+    private List<MessageParticipant> participants = new ArrayList<>();
 }

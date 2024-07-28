@@ -1,5 +1,6 @@
 package com.example.template.domain.message.dto.response;
 
+import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.message.entity.Message;
 import com.example.template.domain.message.entity.MessageParticipant;
 import lombok.AllArgsConstructor;
@@ -75,6 +76,51 @@ public class MessageResponseDTO {
                     .status(participant.getParticipationStatus().name())
                     .leftAt(participant.getLeftAt())
                     .lastViewedMessageId(participant.getLastViewedMessage())
+                    .build();
+        }
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ThreadListDTO {
+        Long threadId;
+        String name;
+        String email;
+        String profileImg;
+        RecentMessage recentMessage;
+        int unreadMessageCount;
+
+        public static ThreadListDTO ofEntity(MessageParticipant participant, RecentMessage recentMessage,
+                                             int unreadMessageCount, Member otherMember) {
+            return ThreadListDTO.builder()
+                    .threadId(participant.getMessageThread().getId())
+                    .name(otherMember.getName())
+                    .email(otherMember.getEmail())
+                    .profileImg(otherMember.getProfileImg())
+                    .recentMessage(recentMessage)
+                    .unreadMessageCount(unreadMessageCount)
+                    .build();
+        }
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RecentMessage {
+        Long messageId;
+        String content;
+        String imgUrl;
+        LocalDateTime createdAt;
+
+        public static RecentMessage fromEntity(Message message) {
+            return RecentMessage.builder()
+                    .messageId(message.getId())
+                    .content(message.getContent())
+                    .imgUrl(message.getImgUrl())
+                    .createdAt(message.getCreatedAt())
                     .build();
         }
     }

@@ -22,7 +22,9 @@ public enum MessageErrorCode implements BaseErrorCode {
 
     // MessageParticipant ERROR 응답
     PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND,
-            "PARTICIPANT401", "채팅방에서 해당 참여자를 찾을 수 없습니다.");
+            "PARTICIPANT401", "채팅방에서 해당 참여자를 찾을 수 없습니다."),
+    OTHER_PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND,
+            "PARTICIPANT402", "쪽지 상대를 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
