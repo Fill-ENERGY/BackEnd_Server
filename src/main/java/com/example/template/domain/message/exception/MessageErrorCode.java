@@ -12,13 +12,17 @@ public enum MessageErrorCode implements BaseErrorCode {
 
     // MessageThread ERROR 응답
     THREAD_NOT_FOUND(HttpStatus.NOT_FOUND,
-            "THREAD401", "채팅방이 없습니다."),
+            "THREAD401", "채팅방을 찾을 수 없습니다."),
 
     // Message ERROR 응답
     MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND,
-                      "MESSAGE401", "쪽지가 없습니다."),
+                      "MESSAGE401", "쪽지를 찾을 수 없습니다."),
     PERMISSION_DENIED(HttpStatus.FORBIDDEN,
-            "MESSAGE402", "보낸 사람 또는 받는 사람이 아닙니다. 권한이 없습니다.");
+            "MESSAGE402", "보낸 사람 또는 받는 사람이 아닙니다. 권한이 없습니다."),
+
+    // MessageParticipant ERROR 응답
+    PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND,
+            "PARTICIPANT401", "채팅방에서 해당 참여자를 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

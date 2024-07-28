@@ -34,8 +34,15 @@ public class MessageController {
 
     @PatchMapping("/messages/{messageId}")
     @Operation(summary = "쪽지 삭제(soft delete) API", description = "쪽지를 논리적으로 삭제합니다. 쪽지를 삭제된 것으로 표시합니다.")
-    public ApiResponse<MessageResponseDTO.MessageDeleteDTO> deleteMessage(@PathVariable(name = "messageId") Long messageId) {
-        MessageResponseDTO.MessageDeleteDTO messageDeleteDTO= messageCommandService.deleteMessage(messageId);
+    public ApiResponse<MessageResponseDTO.MessageDeleteDTO> softDeleteMessage(@PathVariable(name = "messageId") Long messageId) {
+        MessageResponseDTO.MessageDeleteDTO messageDeleteDTO= messageCommandService.softDeleteMessage(messageId);
         return ApiResponse.onSuccess(messageDeleteDTO);
+    }
+
+    @PatchMapping("/threads/{threadId}")
+    @Operation(summary = "채팅방 나가기(soft delete) API", description = "채팅방을 논리적으로 삭제합니다. 채팅방을 나간 것으로 표시합니다.")
+    public ApiResponse<MessageResponseDTO.ThreadDeleteDTO> softDeleteThread(@PathVariable(name = "threadId") Long threadId) {
+        MessageResponseDTO.ThreadDeleteDTO threadDeleteDTO= messageCommandService.softDeleteThread(threadId);
+        return ApiResponse.onSuccess(threadDeleteDTO);
     }
 }

@@ -4,10 +4,7 @@ import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.domain.message.dto.request.MessageRequestDTO;
 import com.example.template.domain.message.dto.response.MessageResponseDTO;
-import com.example.template.domain.message.entity.Message;
-import com.example.template.domain.message.entity.MessageParticipant;
-import com.example.template.domain.message.entity.MessageThread;
-import com.example.template.domain.message.entity.ParticipationStatus;
+import com.example.template.domain.message.entity.*;
 import com.example.template.domain.message.exception.MessageErrorCode;
 import com.example.template.domain.message.exception.MessageException;
 import com.example.template.domain.message.repository.MessageParticipantRepository;
@@ -17,6 +14,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -70,7 +69,7 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     }
 
     @Override
-    public MessageResponseDTO.MessageDeleteDTO deleteMessage(Long messageId) {
+    public MessageResponseDTO.MessageDeleteDTO softDeleteMessage(Long messageId) {
         // TODO 현재 로그인한 멤버 정보 받아오기
         Member member = memberRepository.findById(1L)
                 .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
@@ -88,6 +87,28 @@ public class MessageCommandServiceImpl implements MessageCommandService {
 
         Message updatedMessage = messageRepository.save(message);
         return MessageResponseDTO.MessageDeleteDTO.fromEntity(updatedMessage);
+    }
+
+    @Override
+    public MessageResponseDTO.ThreadDeleteDTO softDeleteThread(Long threadId) {
+        // TODO 현재 로그인한 멤버 정보 받아오기
+        Member member = memberRepository.findById(1L)
+                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+        MessageThread messageThread = messageThreadRepository.findById(threadId)
+                .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
+        MessageParticipant participant = messageParticipantRepository.findByMemberAndMessageThread(member, messageThread)
+                .orElseThrow(() -> new MessageException(MessageErrorCode.PARTICIPANT_NOT_FOUND));
+
+        // 마지막으로 본 메시지 id 업데이트
+        Optional<Message> optionalLastViewedMessage = messageRepository.findTopByReceiverAndReadStatusAndDeletedByRecFalseOrderByCreatedAtDesc(member, ReadStatus.READ);
+        if (optionalLastViewedMessage.isPresent()) {
+            participant.leaveThread(optionalLastViewedMessage.get().getId());
+        } else {
+            participant.leaveThread(null);
+        }
+        messageParticipantRepository.save(participant);
+
+        return MessageResponseDTO.ThreadDeleteDTO.fromEntity(participant);
     }
 
 }
