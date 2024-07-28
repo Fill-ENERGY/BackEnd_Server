@@ -43,4 +43,12 @@ public class Message extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "message_thread_id")
     private MessageThread messageThread;
+
+    public void updateDeletedBySender(boolean deleted) {
+        this.deletedBySen = deleted;
+    }
+
+    public void updateDeletedByReceiver(boolean deleted) {
+        this.deletedByRec = deleted;
+    }
 }

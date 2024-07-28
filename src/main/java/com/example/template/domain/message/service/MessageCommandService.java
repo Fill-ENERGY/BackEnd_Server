@@ -5,4 +5,6 @@ import com.example.template.domain.message.dto.response.MessageResponseDTO;
 
 public interface MessageCommandService {
     MessageResponseDTO.MessageDTO createMessage(MessageRequestDTO.CreateMessageDTO requestDTO);
+
+    MessageResponseDTO.MessageDeleteDTO deleteMessage(Long messageId);
 }

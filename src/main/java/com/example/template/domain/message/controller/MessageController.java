@@ -32,4 +32,10 @@ public class MessageController {
         return ApiResponse.onSuccess(messageDTO);
     }
 
+    @PatchMapping("/messages/{messageId}")
+    @Operation(summary = "쪽지 삭제(soft delete) API", description = "쪽지를 논리적으로 삭제합니다. 쪽지를 삭제된 것으로 표시합니다.")
+    public ApiResponse<MessageResponseDTO.MessageDeleteDTO> deleteMessage(@PathVariable(name = "messageId") Long messageId) {
+        MessageResponseDTO.MessageDeleteDTO messageDeleteDTO= messageCommandService.deleteMessage(messageId);
+        return ApiResponse.onSuccess(messageDeleteDTO);
+    }
 }

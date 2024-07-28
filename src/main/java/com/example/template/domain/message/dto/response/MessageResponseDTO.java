@@ -36,4 +36,24 @@ public class MessageResponseDTO {
         }
     }
 
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MessageDeleteDTO {
+        Long messageId;
+        boolean deletedBySender;
+        boolean deletedByReceiver;
+        LocalDateTime updatedAt;
+
+        public static MessageDeleteDTO fromEntity(Message message) {
+            return MessageDeleteDTO.builder()
+                    .messageId(message.getId())
+                    .deletedBySender(message.isDeletedBySen())
+                    .deletedByReceiver(message.isDeletedByRec())
+                    .updatedAt(message.getUpdatedAt())
+                    .build();
+        }
+    }
+
 }

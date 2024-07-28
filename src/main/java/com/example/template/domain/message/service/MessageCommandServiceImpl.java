@@ -68,4 +68,26 @@ public class MessageCommandServiceImpl implements MessageCommandService {
 
         return MessageResponseDTO.MessageDTO.fromEntity(savedMessage);
     }
+
+    @Override
+    public MessageResponseDTO.MessageDeleteDTO deleteMessage(Long messageId) {
+        // TODO 현재 로그인한 멤버 정보 받아오기
+        Member member = memberRepository.findById(1L)
+                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new MessageException(MessageErrorCode.MESSAGE_NOT_FOUND));
+
+        // sender, receiver 여부 확인
+        if (message.getSender().getId().equals(member.getId())) {
+            message.updateDeletedBySender(true);
+        } else if (message.getReceiver().getId().equals(member.getId())){
+            message.updateDeletedByReceiver(true);
+        } else {
+            throw new MessageException(MessageErrorCode.PERMISSION_DENIED);
+        }
+
+        Message updatedMessage = messageRepository.save(message);
+        return MessageResponseDTO.MessageDeleteDTO.fromEntity(updatedMessage);
+    }
+
 }
