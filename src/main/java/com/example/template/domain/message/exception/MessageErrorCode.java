@@ -12,7 +12,11 @@ public enum MessageErrorCode implements BaseErrorCode {
 
     // MessageThread ERROR 응답
     THREAD_NOT_FOUND(HttpStatus.BAD_REQUEST,
-            "THREAD401", "채팅방이 없습니다.");
+            "THREAD401", "채팅방이 없습니다."),
+
+    // Message ERROR 응답
+    MESSAGE_NOT_FOUND(HttpStatus.BAD_REQUEST,
+                      "MESSAGE401", "쪽지가 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
