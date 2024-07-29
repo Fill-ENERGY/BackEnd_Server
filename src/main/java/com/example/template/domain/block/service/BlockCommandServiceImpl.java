@@ -3,6 +3,8 @@ package com.example.template.domain.block.service;
 import com.example.template.domain.block.dto.request.BlockRequestDTO;
 import com.example.template.domain.block.dto.response.BlockResponseDTO;
 import com.example.template.domain.block.entity.Block;
+import com.example.template.domain.block.exception.BlockErrorCode;
+import com.example.template.domain.block.exception.BlockException;
 import com.example.template.domain.block.repository.BlockRepository;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.member.repository.MemberRepository;
@@ -31,5 +33,22 @@ public class BlockCommandServiceImpl implements BlockCommandService {
         block = blockRepository.save(block);
 
         return BlockResponseDTO.BlockDTO.fromEntity(block);
+    }
+
+    @Override
+    public void deleteBlock(Long blockId) {
+        // TODO 현재 로그인한 멤버 정보 받아오기, 멤버 예외 처리로 변경
+        Member member = memberRepository.findById(1L)
+                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+
+        Block block = blockRepository.findById(blockId)
+                .orElseThrow(() -> new BlockException(BlockErrorCode.BLOCK_NOT_FOUND));
+
+        // 차단 해제 권한이 있는지 확인
+        if (!block.getMember().equals(member)) {
+            throw new BlockException(BlockErrorCode.ACCESS_DENIED);
+        }
+
+        blockRepository.delete(block);
     }
 }
