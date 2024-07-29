@@ -28,7 +28,7 @@ public class StationCommandServiceImpl implements StationCommandService {
     private String endpoint;
 
     @Override
-    @Scheduled(fixedDelay = 3600000) // 1시간마다 갱신
+//    @Scheduled(fixedDelay = 3600000) // 1시간마다 갱신
     public void updateStations() {
         getStationsWithAPI();
     }
