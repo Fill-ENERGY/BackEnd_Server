@@ -15,12 +15,19 @@ import java.util.Optional;
 public interface MessageRepository extends JpaRepository<Message, Long> {
     Optional<Message> findTopByReceiverAndReadStatusAndDeletedByRecFalseOrderByCreatedAtDesc(Member member, ReadStatus readStatus);
 
-    long countByMessageThreadAndReceiverAndReadStatusAndDeletedByRecFalse(MessageThread thread, Member member, ReadStatus readStatus);
+    long countByMessageThreadAndReceiverAndReadStatusAndDeletedByRecFalse(MessageThread messageThread, Member member, ReadStatus readStatus);
 
-    @Query("SELECT m FROM Message m WHERE m.messageThread = :thread AND " +
+    @Query("SELECT m FROM Message m WHERE m.messageThread = :messageThread AND " +
             "((m.sender = :member AND m.deletedBySen = false) OR " +
             "(m.receiver = :member AND m.deletedByRec = false)) " +
             "ORDER BY m.createdAt DESC")
-    List<Message> findMessagesByThreadAndMember(@Param("thread") MessageThread thread,
-                                                @Param("member") Member member, Pageable pageable);
+    List<Message> findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(@Param("messageThread") MessageThread messageThread,
+                                                                           @Param("member") Member member, Pageable pageable);
+
+    @Query("SELECT m FROM Message m WHERE m.messageThread = :messageThread AND " +
+            "((m.sender = :member AND m.deletedBySen = false) OR " +
+            "(m.receiver = :member AND m.deletedByRec = false)) " +
+            "ORDER BY m.createdAt DESC")
+    List<Message> findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(@Param("messageThread") MessageThread messageThread,
+                                                                           @Param("member") Member member);
 }

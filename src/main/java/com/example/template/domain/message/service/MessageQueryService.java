@@ -8,4 +8,6 @@ public interface MessageQueryService {
     MessageResponseDTO.MessageDTO getMessage(Long messageId);
 
     List<MessageResponseDTO.ThreadListDTO> getThreadList();
+
+    MessageResponseDTO.MessageListDTO getMessageList(Long threadId);
 }

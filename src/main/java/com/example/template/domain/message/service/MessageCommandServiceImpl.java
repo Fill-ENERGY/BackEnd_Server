@@ -15,7 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -111,4 +113,48 @@ public class MessageCommandServiceImpl implements MessageCommandService {
         return MessageResponseDTO.ThreadDeleteDTO.fromEntity(participant);
     }
 
+    @Override
+    public MessageResponseDTO.MessageListDTO updateMessageList(Long threadId) {
+        // TODO 현재 로그인한 멤버 정보 받아오기
+        Member member = memberRepository.findById(1L)
+                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+        MessageThread messageThread = messageThreadRepository.findById(threadId)
+                .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
+
+        // 쪽지 상대 찾기
+        Member otherParticipant = getOtherParticipant(messageThread, member);
+
+        // 쪽지 목록 조회
+        List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(messageThread, member);
+
+        // 읽음 상태 업데이트 전 dto 생성(안읽은 쪽지 색상 표시하기 위함)
+        MessageResponseDTO.MessageListDTO messageListDTO = MessageResponseDTO.MessageListDTO.fromEntities(messageThread, otherParticipant, messages);
+
+        // 읽지 않은 쪽지 상태 업데이트
+        List<Message> unreadMessages = messages.stream()
+                .filter(message -> message.getReceiver().equals(member) && message.getReadStatus() == ReadStatus.NOT_READ)
+                .collect(Collectors.toList());
+
+        if (!unreadMessages.isEmpty()) {
+            unreadMessages.forEach(message -> message.updateReadStatus(ReadStatus.READ));
+            messageRepository.saveAll(unreadMessages);
+        }
+
+        return messageListDTO;
+    }
+
+    private static Member getOtherParticipant(MessageThread thread, Member member) {
+        Member otherParticipant = null;
+        for (MessageParticipant p : thread.getParticipants()) {
+            if (!p.getMember().equals(member)) {
+                otherParticipant = p.getMember();
+                break;
+            }
+        }
+
+        if (otherParticipant == null) {
+            throw new MessageException(MessageErrorCode.OTHER_PARTICIPANT_NOT_FOUND);
+        }
+        return otherParticipant;
+    }
 }

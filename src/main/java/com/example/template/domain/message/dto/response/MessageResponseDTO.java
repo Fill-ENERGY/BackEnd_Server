@@ -3,12 +3,15 @@ package com.example.template.domain.message.dto.response;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.message.entity.Message;
 import com.example.template.domain.message.entity.MessageParticipant;
+import com.example.template.domain.message.entity.MessageThread;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MessageResponseDTO {
 
@@ -121,6 +124,32 @@ public class MessageResponseDTO {
                     .content(message.getContent())
                     .imgUrl(message.getImgUrl())
                     .createdAt(message.getCreatedAt())
+                    .build();
+        }
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MessageListDTO {
+        Long threadId;
+        String name;
+        String email;
+        String profileImg;
+        List<MessageDTO> messages;
+
+        public static MessageListDTO fromEntities(MessageThread thread, Member otherParticipant, List<Message> messages) {
+            List<MessageDTO> messageDTOs = messages.stream()
+                    .map(MessageDTO::fromEntity)
+                    .collect(Collectors.toList());
+
+            return MessageListDTO.builder()
+                    .threadId(thread.getId())
+                    .name(otherParticipant.getName())
+                    .email(otherParticipant.getEmail())
+                    .profileImg(otherParticipant.getProfileImg())
+                    .messages(messageDTOs)
                     .build();
         }
     }

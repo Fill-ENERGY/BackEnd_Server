@@ -19,6 +19,6 @@ public class MessageThread extends BaseEntity {
     @Column(name = "message_thread_id", nullable = false)
     private Long id;
 
-    @OneToMany(mappedBy = "messageThread")
+    @OneToMany(mappedBy = "messageThread", cascade = CascadeType.ALL)
     private List<MessageParticipant> participants = new ArrayList<>();
 }

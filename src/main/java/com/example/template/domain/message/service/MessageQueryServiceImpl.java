@@ -8,6 +8,7 @@ import com.example.template.domain.message.exception.MessageErrorCode;
 import com.example.template.domain.message.exception.MessageException;
 import com.example.template.domain.message.repository.MessageParticipantRepository;
 import com.example.template.domain.message.repository.MessageRepository;
+import com.example.template.domain.message.repository.MessageThreadRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +27,7 @@ public class MessageQueryServiceImpl implements MessageQueryService {
     private final MessageRepository messageRepository;
     private final MemberRepository memberRepository;
     private final MessageParticipantRepository messageParticipantRepository;
+    private final MessageThreadRepository messageThreadRepository;
 
     @Override
     public MessageResponseDTO.MessageDTO getMessage(Long messageId) {
@@ -50,7 +52,7 @@ public class MessageQueryServiceImpl implements MessageQueryService {
 
                     // 최신 쪽지 조회(커스컴 쿼리 -> 멤버가 전송자 또는 수신자이면서 삭제하지 않은 쪽지)
                     Pageable pageable = PageRequest.of(0, 1);
-                    List<Message> latestMessages = messageRepository.findMessagesByThreadAndMember(thread, member, pageable);
+                    List<Message> latestMessages = messageRepository.findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(thread, member, pageable);
 
                     MessageResponseDTO.RecentMessage recentMessage = latestMessages.stream()
                             .findFirst()
@@ -67,6 +69,24 @@ public class MessageQueryServiceImpl implements MessageQueryService {
                 })
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public MessageResponseDTO.MessageListDTO getMessageList(Long threadId) {
+        // TODO 현재 로그인한 멤버 정보 받아오기
+        Member member = memberRepository.findById(1L)
+                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+        MessageThread messageThread = messageThreadRepository.findById(threadId)
+                .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
+
+        // 쪽지 상대 찾기
+        Member otherParticipant = getOtherParticipant(messageThread, member);
+
+        // 쪽지 목록 조회
+        List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(messageThread, member);
+
+        return MessageResponseDTO.MessageListDTO.fromEntities(messageThread, otherParticipant, messages);
+    }
+
 
     private static Member getOtherParticipant(MessageThread thread, Member member) {
         Member otherParticipant = null;

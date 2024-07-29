@@ -34,6 +34,20 @@ public class MessageController {
         return ApiResponse.onSuccess(messageDTO);
     }
 
+    @GetMapping("/threads/{threadId}/messages")
+    @Operation(summary = "쪽지 목록 조회 API", description = "채팅방의 쪽지 목록을 조회합니다.")
+    public ApiResponse<MessageResponseDTO.MessageListDTO> getMessageList(@PathVariable(name = "threadId") Long threadId) {
+        MessageResponseDTO.MessageListDTO messageListDTO= messageQueryService.getMessageList(threadId);
+        return ApiResponse.onSuccess(messageListDTO);
+    }
+
+    @PatchMapping("/threads/{threadId}/messages")
+    @Operation(summary = "쪽지 목록 조회 및 읽음 상태 업데이트 API", description = "채팅방의 쪽지 목록을 조회하고 읽지 않은 쪽지를 읽음으로 업데이트합니다.")
+    public ApiResponse<MessageResponseDTO.MessageListDTO> updateMessageList(@PathVariable(name = "threadId") Long threadId) {
+        MessageResponseDTO.MessageListDTO messageListDTO= messageCommandService.updateMessageList(threadId);
+        return ApiResponse.onSuccess(messageListDTO);
+    }
+
     @GetMapping("/threads")
     @Operation(summary = "채팅방 목록 조회 API")
     public ApiResponse<List<MessageResponseDTO.ThreadListDTO>> getThreadList() {

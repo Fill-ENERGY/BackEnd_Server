@@ -51,4 +51,8 @@ public class Message extends BaseEntity {
     public void updateDeletedByReceiver(boolean deleted) {
         this.deletedByRec = deleted;
     }
+
+    public void updateReadStatus(ReadStatus readStatus) {
+        this.readStatus = readStatus;
+    }
 }
