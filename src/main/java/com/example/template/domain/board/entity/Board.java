@@ -1,5 +1,7 @@
 package com.example.template.domain.board.entity;
 
+import com.example.template.domain.board.entity.enums.Category;
+import com.example.template.domain.board.entity.enums.HelpStatus;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.global.common.BaseEntity;
 import jakarta.persistence.*;

@@ -8,17 +8,17 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity
-public class BoardImg {
+public class CommentImg {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "board_img_id", nullable = false)
+    @Column(name = "comment_img_id", nullable = false)
     private Long id;
 
-    @Column(name = "board_img_url", nullable = false)
-    private String boardImgUrl;  // 사진 경로
+    @Column(name = "comment_img_url", nullable = false)
+    private String commentImgUrl;  // 사진 경로
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "board_id")
-    private Board board;
+    @JoinColumn(name = "comment_id")
+    private Comment comment;
 }
