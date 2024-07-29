@@ -26,4 +26,23 @@ public class BlockResponseDTO {
         }
     }
 
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class BlockListDTO {
+        Long blockId;
+        String name;    // 차단 대상 멤버 이름
+        String email;   // 차단 대상 멤버 이메일
+        String profileImg;  // 차단 대상 멤버 프로필 이미지
+
+        public static BlockListDTO fromEntity(Block block) {
+            return BlockListDTO.builder()
+                    .blockId(block.getId())
+                    .name(block.getTargetMember().getName())
+                    .email(block.getTargetMember().getEmail())
+                    .profileImg(block.getTargetMember().getProfileImg())
+                    .build();
+        }
+    }
 }
