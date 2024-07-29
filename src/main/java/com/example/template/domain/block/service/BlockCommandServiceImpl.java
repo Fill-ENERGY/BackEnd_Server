@@ -29,6 +29,17 @@ public class BlockCommandServiceImpl implements BlockCommandService {
         Member targetMember = memberRepository.findById(targetMemberId)
                 .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
 
+        // 자기 자신을 차단하는지 확인
+        if (member.equals(targetMember)) {
+            throw new BlockException(BlockErrorCode.BLOCK_SELF_BLOCK);
+        }
+
+        // 이미 차단된 사용자인지 확인
+        boolean exists = blockRepository.existsByMemberAndTargetMember(member, targetMember);
+        if (exists) {
+            throw new BlockException(BlockErrorCode.BLOCK_ALREADY_EXISTS);
+        }
+
         Block block = BlockRequestDTO.toEntity(member, targetMember);
         block = blockRepository.save(block);
 

@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface BlockRepository extends JpaRepository<Block, Long> {
     List<Block> findByMember(Member member);
+
+    boolean existsByMemberAndTargetMember(Member member, Member targetMember);
 }
