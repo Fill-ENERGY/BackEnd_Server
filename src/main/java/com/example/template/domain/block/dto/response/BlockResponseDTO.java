@@ -16,13 +16,14 @@ public class BlockResponseDTO {
         Long blockId;
         Long memberId;  // 멤버 아이디
         Long targetMemberId;    // 차단 대상 멤버 아이디
+
+        public static BlockDTO fromEntity(Block block) {
+            return BlockDTO.builder()
+                    .blockId(block.getId())
+                    .memberId(block.getMember().getId())
+                    .targetMemberId(block.getTargetMember().getId())
+                    .build();
+        }
     }
 
-    public static BlockDTO fromEntity(Block block) {
-        return BlockDTO.builder()
-                .blockId(block.getId())
-                .memberId(block.getMember().getId())
-                .targetMemberId(block.getTargetMember().getId())
-                .build();
-    }
 }
