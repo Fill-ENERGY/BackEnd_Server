@@ -21,4 +21,17 @@ public class BoardImg {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id")
     private Board board;
+
+    // Setter 메서드
+    public void setBoardImgUrl(String boardImgUrl) {
+        this.boardImgUrl = boardImgUrl;
+    }
+
+    // 연관관계 편의 메서드
+    public void setBoard(Board board){
+        if(this.board != null)
+            board.getImages().remove(this);
+        this.board = board;
+        board.getImages().add(this);
+    }
 }
