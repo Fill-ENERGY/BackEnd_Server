@@ -29,21 +29,21 @@ public class MessageController {
 
     @GetMapping("/messages/{messageId}")
     @Operation(summary = "쪽지 단일 조회 API")
-    public ApiResponse<MessageResponseDTO.MessageDTO> getMessage(@PathVariable(name = "messageId") Long messageId) {
+    public ApiResponse<MessageResponseDTO.MessageDTO> getMessage(@PathVariable("messageId") Long messageId) {
         MessageResponseDTO.MessageDTO messageDTO= messageQueryService.getMessage(messageId);
         return ApiResponse.onSuccess(messageDTO);
     }
 
     @GetMapping("/threads/{threadId}/messages")
     @Operation(summary = "쪽지 목록 조회 API", description = "채팅방의 쪽지 목록을 조회합니다.")
-    public ApiResponse<MessageResponseDTO.MessageListDTO> getMessageList(@PathVariable(name = "threadId") Long threadId) {
+    public ApiResponse<MessageResponseDTO.MessageListDTO> getMessageList(@PathVariable("threadId") Long threadId) {
         MessageResponseDTO.MessageListDTO messageListDTO= messageQueryService.getMessageList(threadId);
         return ApiResponse.onSuccess(messageListDTO);
     }
 
     @PatchMapping("/threads/{threadId}/messages")
     @Operation(summary = "쪽지 목록 조회 및 읽음 상태 업데이트 API", description = "채팅방의 쪽지 목록을 조회하고 읽지 않은 쪽지를 읽음으로 업데이트합니다.")
-    public ApiResponse<MessageResponseDTO.MessageListDTO> updateMessageList(@PathVariable(name = "threadId") Long threadId) {
+    public ApiResponse<MessageResponseDTO.MessageListDTO> updateMessageList(@PathVariable("threadId") Long threadId) {
         MessageResponseDTO.MessageListDTO messageListDTO= messageCommandService.updateMessageList(threadId);
         return ApiResponse.onSuccess(messageListDTO);
     }
@@ -57,14 +57,14 @@ public class MessageController {
 
     @PatchMapping("/messages/{messageId}")
     @Operation(summary = "쪽지 삭제(soft delete) API", description = "쪽지를 논리적으로 삭제합니다. 쪽지를 삭제된 것으로 표시합니다.")
-    public ApiResponse<MessageResponseDTO.MessageDeleteDTO> softDeleteMessage(@PathVariable(name = "messageId") Long messageId) {
+    public ApiResponse<MessageResponseDTO.MessageDeleteDTO> softDeleteMessage(@PathVariable("messageId") Long messageId) {
         MessageResponseDTO.MessageDeleteDTO messageDeleteDTO= messageCommandService.softDeleteMessage(messageId);
         return ApiResponse.onSuccess(messageDeleteDTO);
     }
 
     @PatchMapping("/threads/{threadId}")
     @Operation(summary = "채팅방 나가기(soft delete) API", description = "채팅방을 논리적으로 삭제합니다. 채팅방을 나간 것으로 표시합니다.")
-    public ApiResponse<MessageResponseDTO.ThreadDeleteDTO> softDeleteThread(@PathVariable(name = "threadId") Long threadId) {
+    public ApiResponse<MessageResponseDTO.ThreadDeleteDTO> softDeleteThread(@PathVariable("threadId") Long threadId) {
         MessageResponseDTO.ThreadDeleteDTO threadDeleteDTO= messageCommandService.softDeleteThread(threadId);
         return ApiResponse.onSuccess(threadDeleteDTO);
     }
