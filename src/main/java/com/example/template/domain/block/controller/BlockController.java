@@ -20,7 +20,7 @@ public class BlockController {
 
     @PostMapping("/blocks/members/{targetMemberId}")
     @Operation(summary = "차단하기 API", description = "차단할 멤버의 아이디를 전달해주세요.")
-    public ApiResponse<BlockResponseDTO.BlockDTO> createBlock(@PathVariable(name = "targetMemberId") Long targetMemberId) {
+    public ApiResponse<BlockResponseDTO.BlockDTO> createBlock(@PathVariable("targetMemberId") Long targetMemberId) {
         BlockResponseDTO.BlockDTO blockDTO = blockCommandService.createBlock(targetMemberId);
         return ApiResponse.onSuccess(blockDTO);
     }
@@ -34,7 +34,7 @@ public class BlockController {
 
     @DeleteMapping("/blocks/{blockId}")
     @Operation(summary = "차단 해제 API")
-    public ApiResponse<Void> deleteBlock(@PathVariable(name = "blockId") Long blockId) {
+    public ApiResponse<Void> deleteBlock(@PathVariable("blockId") Long blockId) {
         blockCommandService.deleteBlock(blockId);
         return ApiResponse.onSuccess(null);
     }
