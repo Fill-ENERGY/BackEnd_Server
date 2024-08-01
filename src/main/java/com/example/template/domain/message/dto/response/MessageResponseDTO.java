@@ -28,7 +28,7 @@ public class MessageResponseDTO {
         String readStatus;
         LocalDateTime createdAt;
 
-        public static MessageDTO fromEntity(Message message) {
+        public static MessageDTO from(Message message) {
             return MessageDTO.builder()
                     .messageId(message.getId())
                     .content(message.getContent())
@@ -51,7 +51,7 @@ public class MessageResponseDTO {
         boolean deletedByReceiver;
         LocalDateTime updatedAt;
 
-        public static MessageDeleteDTO fromEntity(Message message) {
+        public static MessageDeleteDTO from(Message message) {
             return MessageDeleteDTO.builder()
                     .messageId(message.getId())
                     .deletedBySender(message.isDeletedBySen())
@@ -72,7 +72,7 @@ public class MessageResponseDTO {
         LocalDateTime leftAt;
         Long lastViewedMessageId;
 
-        public static ThreadDeleteDTO fromEntity(MessageParticipant participant) {
+        public static ThreadDeleteDTO from(MessageParticipant participant) {
             return ThreadDeleteDTO.builder()
                     .threadId(participant.getMessageThread().getId())
                     .memberId(participant.getMember().getId())
@@ -95,8 +95,8 @@ public class MessageResponseDTO {
         RecentMessage recentMessage;
         int unreadMessageCount;
 
-        public static ThreadListDTO ofEntity(MessageParticipant participant, RecentMessage recentMessage,
-                                             int unreadMessageCount, Member otherMember) {
+        public static ThreadListDTO of(MessageParticipant participant, RecentMessage recentMessage,
+                                       int unreadMessageCount, Member otherMember) {
             return ThreadListDTO.builder()
                     .threadId(participant.getMessageThread().getId())
                     .name(otherMember.getName())
@@ -118,7 +118,7 @@ public class MessageResponseDTO {
         String imgUrl;
         LocalDateTime createdAt;
 
-        public static RecentMessage fromEntity(Message message) {
+        public static RecentMessage from(Message message) {
             return RecentMessage.builder()
                     .messageId(message.getId())
                     .content(message.getContent())
@@ -139,9 +139,9 @@ public class MessageResponseDTO {
         String profileImg;
         List<MessageDTO> messages;
 
-        public static MessageListDTO fromEntities(MessageThread thread, Member otherParticipant, List<Message> messages) {
+        public static MessageListDTO from(MessageThread thread, Member otherParticipant, List<Message> messages) {
             List<MessageDTO> messageDTOs = messages.stream()
-                    .map(MessageDTO::fromEntity)
+                    .map(MessageDTO::from)
                     .collect(Collectors.toList());
 
             return MessageListDTO.builder()

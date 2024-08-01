@@ -34,7 +34,7 @@ public class MessageQueryServiceImpl implements MessageQueryService {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.MESSAGE_NOT_FOUND));
 
-        return MessageResponseDTO.MessageDTO.fromEntity(message);
+        return MessageResponseDTO.MessageDTO.from(message);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class MessageQueryServiceImpl implements MessageQueryService {
 
                     MessageResponseDTO.RecentMessage recentMessage = latestMessages.stream()
                             .findFirst()
-                            .map(MessageResponseDTO.RecentMessage::fromEntity)
+                            .map(MessageResponseDTO.RecentMessage::from)
                             .orElse(null);
 
                     // 받은 쪽지 중 읽지 않고 삭제하지 않은 쪽지 개수
@@ -65,7 +65,7 @@ public class MessageQueryServiceImpl implements MessageQueryService {
                     // 쪽지 상대 찾기
                     Member otherParticipant = getOtherParticipant(thread, member);
 
-                    return MessageResponseDTO.ThreadListDTO.ofEntity(participant, recentMessage, (int) unreadMessageCount, otherParticipant);
+                    return MessageResponseDTO.ThreadListDTO.of(participant, recentMessage, (int) unreadMessageCount, otherParticipant);
                 })
                 .collect(Collectors.toList());
     }
@@ -84,7 +84,7 @@ public class MessageQueryServiceImpl implements MessageQueryService {
         // 쪽지 목록 조회
         List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(messageThread, member);
 
-        return MessageResponseDTO.MessageListDTO.fromEntities(messageThread, otherParticipant, messages);
+        return MessageResponseDTO.MessageListDTO.from(messageThread, otherParticipant, messages);
     }
 
 

@@ -67,7 +67,7 @@ public class MessageCommandServiceImpl implements MessageCommandService {
         Message message = requestDTO.toEntity(sender, receiver, messageThread);
         Message savedMessage = messageRepository.save(message);
 
-        return MessageResponseDTO.MessageDTO.fromEntity(savedMessage);
+        return MessageResponseDTO.MessageDTO.from(savedMessage);
     }
 
     @Override
@@ -88,7 +88,7 @@ public class MessageCommandServiceImpl implements MessageCommandService {
         }
 
         Message updatedMessage = messageRepository.save(message);
-        return MessageResponseDTO.MessageDeleteDTO.fromEntity(updatedMessage);
+        return MessageResponseDTO.MessageDeleteDTO.from(updatedMessage);
     }
 
     @Override
@@ -110,7 +110,7 @@ public class MessageCommandServiceImpl implements MessageCommandService {
         }
         messageParticipantRepository.save(participant);
 
-        return MessageResponseDTO.ThreadDeleteDTO.fromEntity(participant);
+        return MessageResponseDTO.ThreadDeleteDTO.from(participant);
     }
 
     @Override
@@ -128,7 +128,7 @@ public class MessageCommandServiceImpl implements MessageCommandService {
         List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(messageThread, member);
 
         // 읽음 상태 업데이트 전 dto 생성(안읽은 쪽지 색상 표시하기 위함)
-        MessageResponseDTO.MessageListDTO messageListDTO = MessageResponseDTO.MessageListDTO.fromEntities(messageThread, otherParticipant, messages);
+        MessageResponseDTO.MessageListDTO messageListDTO = MessageResponseDTO.MessageListDTO.from(messageThread, otherParticipant, messages);
 
         // 읽지 않은 쪽지 상태 업데이트
         List<Message> unreadMessages = messages.stream()
