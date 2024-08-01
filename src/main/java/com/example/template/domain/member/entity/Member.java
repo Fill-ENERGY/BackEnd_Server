@@ -1,5 +1,6 @@
 package com.example.template.domain.member.entity;
 
+import com.example.template.domain.member.dto.ProfileRequestDTO;
 import com.example.template.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,4 +28,10 @@ public class Member extends BaseEntity {
 
     @Column(name = "is_reported")
     private boolean isReported; // 신고 상태
+
+    public void updateProfile(ProfileRequestDTO.UpdateProfileDTO updateProfileDTO) {
+        this.name = updateProfileDTO.getName();
+        this.email = updateProfileDTO.getEmail();
+        this.profileImg = updateProfileDTO.getEmail();
+    }
 }
