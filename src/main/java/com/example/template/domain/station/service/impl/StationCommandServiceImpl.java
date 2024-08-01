@@ -1,6 +1,7 @@
 package com.example.template.domain.station.service.impl;
 
 import com.example.template.domain.station.dto.response.StationOpenApiResponse;
+import com.example.template.domain.station.exception.StationOpenAPIRuntimeException;
 import com.example.template.domain.station.repository.StationRepository;
 import com.example.template.domain.station.service.StationCommandService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,6 +16,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.stream.StreamSupport;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -28,79 +31,88 @@ public class StationCommandServiceImpl implements StationCommandService {
     private String endpoint;
 
     @Override
-//    @Scheduled(fixedDelay = 3600000) // 1시간마다 갱신
+    @Scheduled(fixedDelayString = "${station.update.interval}") // 1시간마다 갱신
     public void updateStations() {
-        getStationsWithAPI();
+        getStationsWithAPI()
+                .flatMapMany(this::getStations)
+                .doOnError(e -> log.error("에러 발생: " + e.getMessage()))
+                .doOnComplete(() -> log.info("충전소 정보를 갱신하였습니다."))
+                .subscribe();
     }
 
     /**
      * 충전소 Open Api를 이용하여 갱신하기
      */
-    private void getStationsWithAPI() {
-        Mono<String> response = webClient
+    private Mono<Integer> getStationsWithAPI() {
+        return webClient
                 .get()
                 .uri(endpoint + "/1/1")
                 .retrieve()
-                .bodyToMono(String.class);
-
-        response.subscribe(
-                jsonResponse -> {
-                    try {
-                        JsonNode countNode = objectMapper.readTree(jsonResponse).path("tbElecWheelChrCharge").path("list_total_count");
-                        getStations(countNode.asInt());
-                    } catch (Exception e) {
-                        log.error(e.getMessage());
-                    }
-                },
-                error -> {
-                    log.error("충전소 개수 요청 도중 에러 발생");
-                    log.error(error.getMessage());
-                }
-        );
+                .bodyToMono(String.class)
+                .map(this::getCountOfStations);
     }
 
     /**
      * 전체 충전소 정보를 가져오기
      * @param count 미리 알아낸 총 충전소의 개수
      */
-    private void getStations(int count) {
+    private Flux<Integer> getStations(int count) {
         // 한 번에 5개씩만 요청 가능
-        Flux<String> response = Flux.range(1, count / 5).flatMap(
+        return Flux.range(1, count / 5).flatMap(
                 index -> webClient
-                            .get()
-                            .uri(endpoint + "/" + (5 * index + 1) + "/" + (5 * (index + 1)))
-                            .retrieve()
-                            .bodyToMono(String.class)
-        );
-
-        response.subscribe(
-                jsonResponse -> {
-                    try {
-                        JsonNode rows = objectMapper.readTree(jsonResponse).path("tbElecWheelChrCharge").path("row");
-
-                        for (JsonNode row : rows) {
-                            StationOpenApiResponse.StationResultDTO station = objectMapper.readValue(row.toString(), StationOpenApiResponse.StationResultDTO.class);
-                            updateStation(station);
-                        }
-                    } catch (Exception e) {
-                        log.error(e.getMessage());
-                    }
-                },
-                error -> {
-                    log.error("충전소 정보 요청 도중 에러 발생");
-                    log.error(error.getMessage());
-                },
-                () -> log.info("충전소 정보를 갱신하였습니다.")
-
+                        .get()
+                        .uri(endpoint + "/" + (5 * index + 1) + "/" + (5 * (index + 1)))
+                        .retrieve()
+                        .bodyToMono(String.class)
+                        .map(this::updateStations)
+                        .doOnError(e -> {
+                            log.error(e.getMessage());
+                            throw new StationOpenAPIRuntimeException("충전소 정보 가져오는 도중 오류");
+                        })
         );
 
     }
 
-    private void updateStation(StationOpenApiResponse.StationResultDTO stationDTO) {
-        stationRepository.findByNameIsAndLatitudeIsAndLongitudeIs(stationDTO.getFCLTYNM(), stationDTO.getLATITUDE(), stationDTO.getLONGITUDE()).ifPresentOrElse(
-                found -> found.update(stationDTO.toStation()),
-                () -> stationRepository.save(stationDTO.toStation())
-        );
+
+    private Integer getCountOfStations(String jsonResponse) {
+        try {
+            JsonNode countNode = objectMapper.readTree(jsonResponse).path("tbElecWheelChrCharge").path("list_total_count");
+            return countNode.asInt();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new StationOpenAPIRuntimeException("충전소 개수 가져오는 도중 오류 발생");
+        }
+    }
+
+    private Integer updateStations(String jsonResponse) {
+        try {
+            JsonNode rows = objectMapper.readTree(jsonResponse).path("tbElecWheelChrCharge").path("row");
+
+            if (rows.isArray()) {
+                return StreamSupport.stream(rows.spliterator(), false)
+                        .map(data -> objectMapper.convertValue(data, StationOpenApiResponse.StationResultDTO.class))
+                        .map(this::updateStation)
+                        .reduce(0, Integer::sum);
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new StationOpenAPIRuntimeException("충전소 전체 업데이트 도중 오류 발생");
+        }
+        return 0;
+    }
+
+
+    private Integer updateStation(StationOpenApiResponse.StationResultDTO stationDTO) {
+        try {
+            stationRepository.findByNameIsAndLatitudeIsAndLongitudeIs(stationDTO.getFCLTYNM(), stationDTO.getLATITUDE(), stationDTO.getLONGITUDE()).ifPresentOrElse(
+                    found -> found.update(stationDTO.toStation()),
+                    () -> stationRepository.save(stationDTO.toStation())
+            );
+            return 1;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return 0;
+        }
     }
 
 }
