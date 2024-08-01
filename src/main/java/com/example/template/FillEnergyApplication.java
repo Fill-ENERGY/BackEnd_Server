@@ -6,10 +6,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
 @EnableJpaAuditing
-public class SmupoolApplication {
+public class FillEnergyApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(SmupoolApplication.class, args);
+		SpringApplication.run(FillEnergyApplication.class, args);
 	}
 
 }

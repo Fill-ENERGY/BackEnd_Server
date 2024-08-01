@@ -1,4 +1,4 @@
-package com.example.template.domain.board.entity;
+package com.example.template.domain.board.entity.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
