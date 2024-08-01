@@ -29,7 +29,7 @@ public class BlockQueryServiceImpl implements BlockQueryService{
 
         List<Block> blockList = blockRepository.findByMember(member);
         return blockList.stream()
-                .map(BlockResponseDTO.BlockListDTO::fromEntity)
+                .map(BlockResponseDTO.BlockListDTO::from)
                 .collect(Collectors.toList());
 
     }

@@ -43,7 +43,7 @@ public class BlockCommandServiceImpl implements BlockCommandService {
         Block block = BlockRequestDTO.toEntity(member, targetMember);
         block = blockRepository.save(block);
 
-        return BlockResponseDTO.BlockDTO.fromEntity(block);
+        return BlockResponseDTO.BlockDTO.from(block);
     }
 
     @Override

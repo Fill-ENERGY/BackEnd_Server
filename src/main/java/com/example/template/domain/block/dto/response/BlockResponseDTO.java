@@ -17,7 +17,7 @@ public class BlockResponseDTO {
         Long memberId;  // 멤버 아이디
         Long targetMemberId;    // 차단 대상 멤버 아이디
 
-        public static BlockDTO fromEntity(Block block) {
+        public static BlockDTO from(Block block) {
             return BlockDTO.builder()
                     .blockId(block.getId())
                     .memberId(block.getMember().getId())
@@ -36,7 +36,7 @@ public class BlockResponseDTO {
         String email;   // 차단 대상 멤버 이메일
         String profileImg;  // 차단 대상 멤버 프로필 이미지
 
-        public static BlockListDTO fromEntity(Block block) {
+        public static BlockListDTO from(Block block) {
             return BlockListDTO.builder()
                     .blockId(block.getId())
                     .name(block.getTargetMember().getName())
