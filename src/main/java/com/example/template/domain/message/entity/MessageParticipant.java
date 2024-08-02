@@ -35,4 +35,10 @@ public class MessageParticipant {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "message_thread_id")
     private MessageThread messageThread;
+
+    public void leaveThread(Long lastViewedMessage) {
+        this.participationStatus = ParticipationStatus.LEFT;
+        this.leftAt = LocalDateTime.now();
+        this.lastViewedMessage = lastViewedMessage;
+    }
 }
