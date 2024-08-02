@@ -8,10 +8,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableJpaAuditing
 @EnableScheduling
-public class SmupoolApplication {
+public class FillEnergyApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(SmupoolApplication.class, args);
+		SpringApplication.run(FillEnergyApplication.class, args);
 	}
 
 }
