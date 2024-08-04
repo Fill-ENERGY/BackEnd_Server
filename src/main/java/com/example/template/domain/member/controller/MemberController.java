@@ -28,6 +28,8 @@ public class MemberController {
 
     private final MemberService memberService;
     private final JwtProvider jwtProvider;
+    final private MemberCommandService memberCommandService;
+    final private MemberQueryService memberQueryService;
 
     @Operation(summary = "일반 회원가입", description = "이름, 이메일, 비밀번호를 입력받아 회원가입을 진행합니다. 이메일은 중복 불가, 비밀먼호는 인코딩 되어 저장됨. 참고)")
     @PostMapping("/signup")
@@ -64,5 +66,28 @@ public class MemberController {
             throw new SecurityCustomException(TokenErrorCode.INVALID_TOKEN, iae);
         }
     }
+  
+    @Operation(summary = "프로필 수정 API", description = "프로필 수정 API입니다.")
+    @PatchMapping("/profiles")
+    public ApiResponse<ProfileResponseDTO.ProfileDTO> updateProfile(@RequestBody ProfileRequestDTO.UpdateProfileDTO updateProfileDTO){
+        //임의로 넣음 -> 추후 @Authenti~~ 사용예정
+        Long memberId = 1L;
+        return ApiResponse.onSuccess(memberCommandService.updateProfile(memberId, updateProfileDTO));
+    }
+
+    @Operation(summary = "프로필 조회 API", description = "프로필 조회 API입니다.")
+    @GetMapping("/profiles")
+    public ApiResponse<ProfileResponseDTO.ProfileDTO> getProfile(){
+        //임의로 넣음 -> 추후 @Authenti~~ 사용예정
+        Long memberId = 1L;
+        return ApiResponse.onSuccess(memberQueryService.getProfile(memberId));
+    }
+
+    @Operation(summary = "프로필 삭제 API", description = "프로필 삭제 API입니다.")
+    @DeleteMapping("/members/profile")
+    public ApiResponse<Long> deleteProfile(){
+        //임의로 넣음 -> 추후 @Authenti~~ 사용예정
+        Long memberId =1L;
+        return ApiResponse.onSuccess(memberCommandService.deleteProfile(memberId));
 
 }

@@ -15,10 +15,23 @@ public class BoardImg {
     @Column(name = "board_img_id", nullable = false)
     private Long id;
 
-    @Column(name = "img_url", nullable = false)
-    private String imgUrl;  // 사진 경로
+    @Column(name = "board_img_url", nullable = false)
+    private String boardImgUrl;  // 사진 경로
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id")
     private Board board;
+
+    // Setter 메서드
+    public void setBoardImgUrl(String boardImgUrl) {
+        this.boardImgUrl = boardImgUrl;
+    }
+
+    // 연관관계 편의 메서드
+    public void setBoard(Board board){
+        if(this.board != null)
+            board.getImages().remove(this);
+        this.board = board;
+        board.getImages().add(this);
+    }
 }

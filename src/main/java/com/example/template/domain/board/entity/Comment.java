@@ -27,8 +27,8 @@ public class Comment extends BaseEntity {
     @Column(name = "is_secret", nullable = false)
     private boolean isSecret;  // 비밀 여부
 
-    @Column(name = "is_author", nullable = false)
-    private boolean isAuthor;  // 글쓴이 인지 여부
+    // is_author 필드 제거
+    // TODO : "글쓴이"와 같은 유저인지는 동적인 정보이므로, 계산 로직으로 처리
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
@@ -45,4 +45,50 @@ public class Comment extends BaseEntity {
 
     @OneToMany(mappedBy = "parent")
     private List<Comment> children = new ArrayList<>();
+
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CommentImg> images = new ArrayList<>();
+
+    // Setter 메서드들
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public void setSecret(boolean secret) {
+        isSecret = secret;
+    }
+
+    // 연관관계 편의 메서드들
+    public void setMember(Member member) {
+        this.member = member;
+    }
+
+    public void setBoard(Board board) {
+        this.board = board;
+        board.getComments().add(this);
+    }
+
+    public void setParent(Comment parent) {
+        this.parent = parent;
+    }
+
+    public void addChild(Comment child) {
+        this.children.add(child);
+        child.setParent(this);
+    }
+
+    public void removeChild(Comment child) {
+        this.children.remove(child);
+        child.setParent(null);
+    }
+
+    public void addCommentImg(CommentImg commentImg) {
+        this.images.add(commentImg);
+        commentImg.setComment(this);
+    }
+
+    public void removeCommentImg(CommentImg commentImg) {
+        this.images.remove(commentImg);
+        commentImg.setComment(null);
+    }
 }
