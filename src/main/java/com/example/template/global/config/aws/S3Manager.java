@@ -72,7 +72,7 @@ public class S3Manager {
         return uploadedFileUrls;
     }
 
-    // 파일 삭제
+    // 단일 파일 삭제
     public void deleteFile(String fileUrl) {
         try {
             // 파일 URL에서 버킷 이름과 키를 추출
@@ -90,6 +90,13 @@ public class S3Manager {
         } catch (IOException e) {
             log.error("error at S3Manager deleteFile: {}", e.getMessage(), e);
             throw new S3Exception(S3ErrorCode.DELETE_FAILED);
+        }
+    }
+
+    // 다중 파일 삭제
+    public void deleteFiles(List<String> fileUrls) {
+        for (String fileUrl : fileUrls) {
+            deleteFile(fileUrl);
         }
     }
 
