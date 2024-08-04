@@ -13,7 +13,7 @@ public enum S3ErrorCode implements BaseErrorCode {
     // S3 ERROR 응답
     UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3500_1", "S3 파일 업로드에 실패했습니다."),
     DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3500_2", "S3 파일 삭제에 실패했습니다."),
-    SIZE_MISMATCH(HttpStatus.BAD_REQUEST, "S3500_3", "파일 수와 키 이름 수가 일치하지 않습니다.");
+    SIZE_MISMATCH(HttpStatus.INTERNAL_SERVER_ERROR, "S3500_3", "파일 수와 키 이름 수가 일치하지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
