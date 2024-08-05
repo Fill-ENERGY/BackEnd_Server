@@ -31,7 +31,6 @@ public class Member extends BaseEntity {
     private String role;    // 역할
 
     @Column(name = "profile_img")
-    @Lob
     private String profileImg;  // 프로필 이미지
 
     @Column(name = "is_reported")
