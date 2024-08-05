@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 public enum ReportErrorCode implements BaseErrorCode {
 
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND,
-            "REPORT401", "채팅방을 찾을 수 없습니다.");
+            "REPORT401", "존재하지 않는 targetID 이름입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

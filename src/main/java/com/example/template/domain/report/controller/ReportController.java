@@ -20,9 +20,9 @@ public class ReportController {
         return ApiResponse.onSuccess(reportCommandService.createReport(memberId, createReportDTO));
     }
 
-    public ApiResponse<Long> deleteReport(@RequestBody ReportRequestDTO.UpdateReportDTO updateReportDTO){
+    public ApiResponse<Long> deleteReport(@RequestBody ReportRequestDTO.DeleteReportDTO deleteReportDTO){
         //추후에 @Authenticaton~~ 추가 예정
         Long memberId = 1L;
-        return ApiResponse.onSuccess(reportCommandService.deleteReport(memberId, updateReportDTO));
+        return ApiResponse.onSuccess(reportCommandService.deleteReport(memberId, deleteReportDTO));
     }
 }
