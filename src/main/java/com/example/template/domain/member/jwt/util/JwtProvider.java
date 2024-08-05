@@ -85,12 +85,6 @@ public class JwtProvider {
         return refreshToken;
     }
 
-    // jwt 에서 회원 구분 pk 추출
-    public String getUserPk(String token) {
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getSubject();
-    }
-
-
     public boolean validateRefreshToken(String refreshToken) {
         // refreshToken validate
         String username = getUserEmail(refreshToken);
