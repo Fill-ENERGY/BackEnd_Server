@@ -1,6 +1,5 @@
 package com.example.template.domain.member.service;
 
-import com.example.template.domain.member.converter.MemberConverter;
 import com.example.template.domain.member.dto.MemberRequestDTO;
 import com.example.template.domain.member.dto.MemberResponseDTO;
 import com.example.template.domain.member.entity.Member;

@@ -1,16 +1,11 @@
 package com.example.template.domain.member.controller;
 
-import com.example.template.domain.member.converter.MemberConverter;
 import com.example.template.domain.member.dto.MemberRequestDTO;
 import com.example.template.domain.member.dto.MemberResponseDTO;
-import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.member.jwt.dto.JwtDTO;
-import com.example.template.domain.member.jwt.exception.SecurityCustomException;
-import com.example.template.domain.member.jwt.exception.TokenErrorCode;
 import com.example.template.domain.member.jwt.util.JwtProvider;
 import com.example.template.domain.member.service.MemberService;
 import com.example.template.global.apiPayload.ApiResponse;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
 
     private final MemberService memberService;
-    private final JwtProvider jwtProvider;
 
     @Operation(summary = "일반 회원가입", description = "이름, 이메일, 비밀번호를 입력받아 회원가입을 진행합니다. 이메일은 중복 불가, 비밀먼호는 인코딩 되어 저장됨. 참고)")
     @PostMapping("/signup")
