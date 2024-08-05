@@ -1,9 +1,13 @@
 package com.example.template.domain.member.jwt.filter;
 
 import com.example.template.domain.member.entity.Member;
+import com.example.template.domain.member.jwt.exception.SecurityCustomException;
 import com.example.template.domain.member.jwt.userdetails.PrincipalDetails;
+import com.example.template.domain.member.jwt.util.HttpResponseUtil;
 import com.example.template.domain.member.jwt.util.JwtProvider;
 import com.example.template.domain.member.repository.MemberRepository;
+import com.example.template.global.apiPayload.ApiResponse;
+import com.example.template.global.apiPayload.code.status.BaseErrorCode;
 import com.example.template.global.util.RedisUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -42,24 +46,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String accessToken = jwtProvider.resolveAccessToken(request);
 
             // accessToken 없이 접근할 경우
-            if (accessToken == null) {
-                filterChain.doFilter(request, response);
-                return;
+            if (jwtProvider.validateRefreshToken(accessToken)) {
+                // logout 처리된 accessToken
+                if (redisUtil.get(accessToken) != null && redisUtil.get(accessToken).equals("logout")) {
+                    log.info("[*] Logout accessToken");
+                    // TODO InsufficientAuthenticationException 예외 처리
+                    log.info("==================");
+                    filterChain.doFilter(request, response);
+                    log.info("==================");
+                    return;
+                }
+
+                log.info("[*] Authorization with Token");
+                authenticateAccessToken(accessToken);
             }
 
-            // logout 처리된 accessToken
-            if (redisUtil.get(accessToken) != null && redisUtil.get(accessToken).equals("logout")) {
-                log.info("[*] Logout accessToken");
-                // TODO InsufficientAuthenticationException 예외 처리
-                log.info("==================");
-                filterChain.doFilter(request, response);
-                log.info("==================");
-                return;
-            }
-
-            log.info("[*] Authorization with Token");
-            authenticateAccessToken(accessToken);
             filterChain.doFilter(request, response);
+        } catch (SecurityCustomException e) {
+            log.warn(">>>>> SecurityCustomException : ", e);
+            BaseErrorCode errorCode = e.getErrorCode();
+            ApiResponse<String> errorResponse = ApiResponse.onFailure(
+                    errorCode.getCode(),
+                    errorCode.getMessage(),
+                    e.getMessage()
+            );
+            HttpResponseUtil.setErrorResponse(
+                    response,
+                    errorCode.getHttpStatus(),
+                    errorResponse
+            );
         } catch (ExpiredJwtException e) {
             log.warn("[*] case : accessToken Expired");
         }

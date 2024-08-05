@@ -1,7 +1,6 @@
 package com.example.template.global.config;
 
 import com.example.template.domain.member.jwt.filter.JwtAuthenticationFilter;
-import com.example.template.domain.member.jwt.filter.JwtExceptionFilter;
 import com.example.template.domain.member.jwt.handler.JwtAccessDeniedHandler;
 import com.example.template.domain.member.jwt.handler.JwtAuthenticationEntryPoint;
 import com.example.template.domain.member.jwt.util.JwtProvider;
@@ -56,9 +55,6 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable);
         http
                 .addFilterBefore(new JwtAuthenticationFilter(jwtProvider, redisUtil, memberRepository), UsernamePasswordAuthenticationFilter.class);
-
-        http
-                .addFilterBefore(new JwtExceptionFilter(), JwtAuthenticationFilter.class);
         http
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(allowedUrls).permitAll() // 허용된 경로만 접근 허용
