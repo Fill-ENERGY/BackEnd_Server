@@ -46,7 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String accessToken = jwtProvider.resolveAccessToken(request);
 
             // accessToken 없이 접근할 경우
-            if (jwtProvider.validateRefreshToken(accessToken)) {
+            if (accessToken != null && jwtProvider.validateRefreshToken(accessToken)) {
                 // logout 처리된 accessToken
                 if (redisUtil.get(accessToken) != null && redisUtil.get(accessToken).equals("logout")) {
                     log.info("[*] Logout accessToken");
