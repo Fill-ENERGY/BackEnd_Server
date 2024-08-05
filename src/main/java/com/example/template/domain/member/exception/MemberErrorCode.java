@@ -1,7 +1,6 @@
 package com.example.template.domain.member.exception;
 
 import com.example.template.global.apiPayload.ApiResponse;
-import com.example.template.global.apiPayload.code.GeneralErrorCode;
 import com.example.template.global.apiPayload.code.status.BaseErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

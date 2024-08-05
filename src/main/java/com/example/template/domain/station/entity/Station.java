@@ -21,6 +21,8 @@ public class Station {
 
     private String address; // 도로명
 
+    private String streetNumber;
+
     private double latitude;    // 위도
 
     private double longitude;    // 경도
@@ -59,4 +61,21 @@ public class Station {
 
     @Column(name = "institution_phone")
     private String institutionPhone;  // 관리기관 전화번호
+
+    public void update(Station station) {
+        this.name = station.getName();
+        this.address = station.getAddress();
+        this.streetNumber = station.getStreetNumber();
+        this.weekdayOpen = station.getWeekdayOpen();
+        this.weekdayClose = station.getWeekdayClose();
+        this.saturdayOpen = station.getSaturdayOpen();
+        this.saturdayClose = station.getSaturdayClose();
+        this.holidayOpen = station.getHolidayOpen();
+        this.holidayClose = station.getHolidayClose();
+        this.concurrentUsageCount = station.getConcurrentUsageCount();
+        this.airInjectionAvailable = station.isAirInjectionAvailable();
+        this.phoneChargingAvailable = station.isPhoneChargingAvailable();
+        this.institutionName = station.institutionName;
+        this.institutionPhone = station.institutionPhone;
+    }
 }

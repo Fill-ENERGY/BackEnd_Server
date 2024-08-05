@@ -23,4 +23,13 @@ public class BoardLike {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "board_id")
     private Board board;
+
+    // 연관관계 편의 메서드들
+    public void setMember(Member member) {
+        this.member = member;
+    }
+
+    public void setBoard(Board board) {
+        this.board = board;
+    }
 }
