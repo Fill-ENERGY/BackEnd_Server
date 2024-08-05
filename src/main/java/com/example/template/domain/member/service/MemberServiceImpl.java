@@ -32,7 +32,7 @@ public class MemberServiceImpl implements MemberService{
     private final JwtProvider jwtProvider;
     private final RedisUtil redisUtil;
     @Override
-    public Member signup(MemberRequestDTO.SignupDTO signupDTO) {
+    public MemberResponseDTO.SignupResultDTO signup(MemberRequestDTO.SignupDTO signupDTO) {
 
         // pw, pw 확인 일치 확인
         if (!signupDTO.getPassword().equals(signupDTO.getPasswordCheck()))
@@ -43,8 +43,10 @@ public class MemberServiceImpl implements MemberService{
             throw new MemberException(MemberErrorCode.USER_ALREADY_EXIST);
         }
 
-        Member member = MemberConverter.toMember(signupDTO, passwordEncoder);
-        return memberRepository.save(member);
+        String encodedPw = passwordEncoder.encode(signupDTO.getPassword());
+        Member member = signupDTO.toEntity(encodedPw);
+
+        return MemberResponseDTO.SignupResultDTO.from(memberRepository.save(member));
     }
 
     @Override
@@ -64,7 +66,7 @@ public class MemberServiceImpl implements MemberService{
         String accessToken = jwtProvider.createJwtAccessToken(memberDetails);
         String refreshToken = jwtProvider.createJwtRefreshToken(memberDetails);
 
-        return MemberConverter.toLoginResultDTO(member, accessToken, refreshToken);
+        return MemberResponseDTO.LoginResultDTO.from(member, accessToken, refreshToken);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.example.template.domain.member.dto;
 
+import com.example.template.domain.member.entity.Member;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -42,5 +43,13 @@ public class MemberRequestDTO {
         @NotBlank(message = "[ERROR] 비밀번호 재확인 입력은 필수 입니다.")
         @Schema(description = "passwordCheck", example = "test1234!!")
         private String passwordCheck;
+
+        public Member toEntity(String encodedPw){
+            return Member.builder()
+                    .email(email)
+                    .password(encodedPw)
+                    .name(name)
+                    .build();
+        }
     }
 }

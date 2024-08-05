@@ -1,5 +1,6 @@
 package com.example.template.domain.member.dto;
 
+import com.example.template.domain.member.entity.Member;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,6 +19,15 @@ public class MemberResponseDTO {
         private LocalDateTime createdAt;
         private String accessToken;
         private String refreshToken;
+
+        public static LoginResultDTO from(Member member, String accessToken, String refreshToken){
+            return LoginResultDTO.builder()
+                    .userId(member.getId())
+                    .createdAt(LocalDateTime.now())
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .build();
+        }
     }
 
     @Getter
@@ -27,5 +37,13 @@ public class MemberResponseDTO {
     public static class SignupResultDTO {
         private Long id;
         private LocalDateTime createdAt;
+
+        public static SignupResultDTO from(Member member){
+            return SignupResultDTO.builder()
+                    .id(member.getId())
+                    .createdAt(member.getCreatedAt())
+                    .build();
+        }
     }
+
 }

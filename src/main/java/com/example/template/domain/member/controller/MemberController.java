@@ -32,8 +32,7 @@ public class MemberController {
     @Operation(summary = "일반 회원가입", description = "이름, 이메일, 비밀번호를 입력받아 회원가입을 진행합니다. 이메일은 중복 불가, 비밀먼호는 인코딩 되어 저장됨. 참고)")
     @PostMapping("/signup")
     public ApiResponse<MemberResponseDTO.SignupResultDTO> signup(@RequestBody MemberRequestDTO.SignupDTO requestDTO) {
-        Member member = memberService.signup(requestDTO);
-        return ApiResponse.onSuccess(MemberConverter.toSignupResultDTO(member));
+        return ApiResponse.onSuccess(memberService.signup(requestDTO));
     }
 
     @Operation(summary = "일반 로그인", description = "이메일, 비밀번호를 입력받아 로그인을 진행합니다." +
