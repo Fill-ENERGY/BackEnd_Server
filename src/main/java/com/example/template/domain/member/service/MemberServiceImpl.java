@@ -6,6 +6,7 @@ import com.example.template.domain.member.dto.MemberResponseDTO;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.member.exception.MemberErrorCode;
 import com.example.template.domain.member.exception.MemberException;
+import com.example.template.domain.member.jwt.dto.JwtDTO;
 import com.example.template.domain.member.jwt.exception.SecurityCustomException;
 import com.example.template.domain.member.jwt.exception.TokenErrorCode;
 import com.example.template.domain.member.jwt.userdetails.PrincipalDetails;
@@ -84,6 +85,18 @@ public class MemberServiceImpl implements MemberService{
             );
         } catch (ExpiredJwtException e) {
             throw new SecurityCustomException(TokenErrorCode.TOKEN_EXPIRED);
+        }
+    }
+
+    @Override
+    public JwtDTO reissueToken(String refreshToken) {
+        try {
+            jwtProvider.validateRefreshToken(refreshToken);
+            return jwtProvider.reissueToken(refreshToken);
+        } catch (ExpiredJwtException eje) {
+            throw new SecurityCustomException(TokenErrorCode.TOKEN_EXPIRED, eje);
+        } catch (IllegalArgumentException iae) {
+            throw new SecurityCustomException(TokenErrorCode.INVALID_TOKEN, iae);
         }
     }
 }

@@ -53,16 +53,7 @@ public class MemberController {
     @Operation(summary = "토큰 재발급", description = "JWT accessToken이 만료됐을 시 refreshToken을 통해 accessToken 재발급.")
     @GetMapping("/reissue")
     public ApiResponse<JwtDTO> reissueToken(@RequestHeader("RefreshToken") String refreshToken) {
-        try {
-            jwtProvider.validateRefreshToken(refreshToken);
-            return ApiResponse.onSuccess(
-                    jwtProvider.reissueToken(refreshToken)
-            );
-        } catch (ExpiredJwtException eje) {
-            throw new SecurityCustomException(TokenErrorCode.TOKEN_EXPIRED, eje);
-        } catch (IllegalArgumentException iae) {
-            throw new SecurityCustomException(TokenErrorCode.INVALID_TOKEN, iae);
-        }
+        return ApiResponse.onSuccess(memberService.reissueToken(refreshToken));
     }
 
 }

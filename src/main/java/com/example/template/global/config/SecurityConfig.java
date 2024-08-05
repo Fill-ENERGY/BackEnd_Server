@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 public class SecurityConfig {
     private final String[] swaggerUrls = {"/swagger-ui/**", "/v3/**"};
     private final String[] authUrls = {"/", "/api/v1/members/signup/**", "/members/social/**", "/api/v1/members/login/**",
-            "/members/reissue/**"}; // TODO 추후 API 개발
+            "/api/v1/members/reissue/**"}; // TODO 추후 API 개발
     private final String[] allowedUrls = Stream.concat(Arrays.stream(swaggerUrls), Arrays.stream(authUrls))
             .toArray(String[]::new);
 
