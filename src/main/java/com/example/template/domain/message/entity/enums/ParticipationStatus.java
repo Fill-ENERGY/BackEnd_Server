@@ -1,4 +1,4 @@
-package com.example.template.domain.message.entity;
+package com.example.template.domain.message.entity.enums;
 
 public enum ParticipationStatus {
     ACTIVE,

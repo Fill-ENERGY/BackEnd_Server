@@ -1,6 +1,7 @@
 package com.example.template.domain.message.entity;
 
 import com.example.template.domain.member.entity.Member;
+import com.example.template.domain.message.entity.enums.ParticipationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

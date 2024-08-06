@@ -1,7 +1,6 @@
 package com.example.template.domain.report.entity;
 
 import com.example.template.domain.member.entity.Member;
-import com.example.template.domain.message.entity.ReadStatus;
 import com.example.template.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
