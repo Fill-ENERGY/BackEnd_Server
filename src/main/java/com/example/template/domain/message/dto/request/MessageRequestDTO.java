@@ -3,7 +3,7 @@ package com.example.template.domain.message.dto.request;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.message.entity.Message;
 import com.example.template.domain.message.entity.MessageThread;
-import com.example.template.domain.message.entity.ReadStatus;
+import com.example.template.domain.message.entity.enums.ReadStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
@@ -11,16 +11,15 @@ public class MessageRequestDTO {
 
     @Getter
     public static class CreateMessageDTO {
-        Long threadId;
-        String content;
-        String imgUrl;
+        private Long threadId;
+        private String content;
         @NotNull(message = "받는 사람 id는 필수입니다.")
-        Long receiverId;
+        private Long receiverId;
 
-        public Message toEntity(Member sender, Member receiver, MessageThread messageThread) {
+        public Message toEntity(Member sender, Member receiver, String imgUrl, MessageThread messageThread) {
             return Message.builder()
                     .content(content)
-                    .imgUrl(imgUrl)
+//                    .imgUrl(imgUrl)
                     .readStatus(ReadStatus.NOT_READ)
                     .deletedBySen(false)
                     .deletedByRec(false)
