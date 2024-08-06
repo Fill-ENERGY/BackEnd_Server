@@ -116,14 +116,12 @@ public class MessageResponseDTO {
     public static class RecentMessage {
         private Long messageId;
         private String content;
-//        private String imgUrl;
         private LocalDateTime createdAt;
 
         public static RecentMessage from(Message message) {
             return RecentMessage.builder()
                     .messageId(message.getId())
-                    .content(message.getContent())
-//                    .imgUrl(message.getImgUrl())
+                    .content(message.getContent() == null || message.getContent().isEmpty() ? "사진을 전송했습니다." : message.getContent())
                     .createdAt(message.getCreatedAt())
                     .build();
         }
