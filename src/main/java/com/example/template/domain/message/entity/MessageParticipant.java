@@ -42,4 +42,8 @@ public class MessageParticipant {
         this.leftAt = LocalDateTime.now();
         this.lastViewedMessage = lastViewedMessage;
     }
+
+    public void updateParticipationStatus(ParticipationStatus participationStatus) {
+        this.participationStatus = participationStatus;
+    }
 }

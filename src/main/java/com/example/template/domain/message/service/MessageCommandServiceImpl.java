@@ -64,8 +64,14 @@ public class MessageCommandServiceImpl implements MessageCommandService {
 
     private MessageThread getOrCreateMessageThread(Long threadId, Member sender, Member receiver) {
         if (threadId != null) { // 채팅방이 존재하는 경우
-            return messageThreadRepository.findById(threadId)
+            MessageThread messageThread = messageThreadRepository.findById(threadId)
                     .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
+
+            // 쪽지 전송자 또는 수신자가 채팅방을 나간 경우, 참여 상태를 다시 ACTIVE로 업데이트
+            updateParticipantStatusToActive(messageThread, sender);
+            updateParticipantStatusToActive(messageThread, receiver);
+
+            return messageThread;
         } else {    // 채팅방이 존재하지 않는 경우(첫 쪽지)
             // 채팅방 생성
             MessageThread newMessageThread = MessageThread.builder().build();
@@ -76,6 +82,16 @@ public class MessageCommandServiceImpl implements MessageCommandService {
             createMessageParticipant(savedMessageThread, receiver);
 
             return savedMessageThread;
+        }
+    }
+
+    private void updateParticipantStatusToActive(MessageThread messageThread, Member member) {
+        MessageParticipant messageParticipant = messageParticipantRepository.findByMemberAndMessageThread(member, messageThread)
+                .orElseThrow(() -> new MessageException(MessageErrorCode.PARTICIPANT_NOT_FOUND));
+
+        if (messageParticipant.getParticipationStatus() == ParticipationStatus.LEFT) {
+            messageParticipant.updateParticipationStatus(ParticipationStatus.ACTIVE);
+            messageParticipantRepository.save(messageParticipant);
         }
     }
 
