@@ -5,6 +5,8 @@ import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.domain.message.dto.request.MessageRequestDTO;
 import com.example.template.domain.message.dto.response.MessageResponseDTO;
 import com.example.template.domain.message.entity.*;
+import com.example.template.domain.message.entity.enums.ParticipationStatus;
+import com.example.template.domain.message.entity.enums.ReadStatus;
 import com.example.template.domain.message.exception.MessageErrorCode;
 import com.example.template.domain.message.exception.MessageException;
 import com.example.template.domain.message.repository.MessageParticipantRepository;
@@ -37,37 +39,41 @@ public class MessageCommandServiceImpl implements MessageCommandService {
         Member receiver = memberRepository.findById(requestDTO.getReceiverId())
                 .orElseThrow(() -> new EntityNotFoundException("Receiver not found"));
 
-        MessageThread messageThread = null;
-        if (requestDTO.getThreadId() != null) { // 채팅방이 존재하는 경우
-            messageThread = messageThreadRepository.findById(requestDTO.getThreadId())
-                    .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
-        } else {    // 채팅방이 존재하지 않는 경우(첫 쪽지)
-            // 채팅방 생성
-            MessageThread newMessageThread = MessageThread.builder().build();
-            messageThread = messageThreadRepository.save(newMessageThread);
-
-            // 참여자 생성
-            MessageParticipant senderParticipant = MessageParticipant.builder()
-                    .member(sender)
-                    .messageThread(messageThread)
-                    .participationStatus(ParticipationStatus.ACTIVE)
-                    .build();
-            messageParticipantRepository.save(senderParticipant);
-
-            MessageParticipant receiverParticipant = MessageParticipant.builder()
-                    .member(receiver)
-                    .messageThread(messageThread)
-                    .participationStatus(ParticipationStatus.ACTIVE)
-                    .build();
-            messageParticipantRepository.save(receiverParticipant);
-        }
-
+        // 채팅방 조회 또는 생성
+        MessageThread messageThread = getOrCreateMessageThread(requestDTO.getThreadId(), sender, receiver);
+        
         // 쪽지 생성
         // TODO S3 구현 후 사진 저장 로직 추가 예정
         Message message = requestDTO.toEntity(sender, receiver, messageThread);
         Message savedMessage = messageRepository.save(message);
 
         return MessageResponseDTO.MessageDTO.from(savedMessage);
+    }
+
+    private MessageThread getOrCreateMessageThread(Long threadId, Member sender, Member receiver) {
+        if (threadId != null) { // 채팅방이 존재하는 경우
+            return messageThreadRepository.findById(threadId)
+                    .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
+        } else {    // 채팅방이 존재하지 않는 경우(첫 쪽지)
+            // 채팅방 생성
+            MessageThread newMessageThread = MessageThread.builder().build();
+            MessageThread savedMessageThread = messageThreadRepository.save(newMessageThread);
+
+            // 참여자 생성
+            createMessageParticipant(savedMessageThread, sender);
+            createMessageParticipant(savedMessageThread, receiver);
+
+            return savedMessageThread;
+        }
+    }
+
+    private void createMessageParticipant(MessageThread messageThread, Member member) {
+        MessageParticipant messageParticipant = MessageParticipant.builder()
+                .member(member)
+                .messageThread(messageThread)
+                .participationStatus(ParticipationStatus.ACTIVE)
+                .build();
+        messageParticipantRepository.save(messageParticipant);
     }
 
     @Override
