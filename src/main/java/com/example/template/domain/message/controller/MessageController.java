@@ -8,7 +8,9 @@ import com.example.template.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -20,10 +22,11 @@ public class MessageController {
     private final MessageCommandService messageCommandService;
     private final MessageQueryService messageQueryService;
 
-    @PostMapping("/messages")
+    @PostMapping(value = "/messages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "쪽지 생성 API")
-    public ApiResponse<MessageResponseDTO.MessageDTO> createMessage(@Valid @RequestBody MessageRequestDTO.CreateMessageDTO requestDTO) {
-        MessageResponseDTO.MessageDTO messageDTO = messageCommandService.createMessage(requestDTO);
+    public ApiResponse<MessageResponseDTO.MessageDTO> createMessage(@RequestPart(value = "file", required = false) List<MultipartFile> files,
+                                                                    @Valid @RequestPart("requestDTO") MessageRequestDTO.CreateMessageDTO requestDTO) {
+        MessageResponseDTO.MessageDTO messageDTO = messageCommandService.createMessage(files, requestDTO);
         return ApiResponse.onSuccess(messageDTO);
     }
 

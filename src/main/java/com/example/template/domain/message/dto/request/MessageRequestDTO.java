@@ -16,10 +16,9 @@ public class MessageRequestDTO {
         @NotNull(message = "받는 사람 id는 필수입니다.")
         private Long receiverId;
 
-        public Message toEntity(Member sender, Member receiver, String imgUrl, MessageThread messageThread) {
+        public Message toEntity(Member sender, Member receiver, MessageThread messageThread) {
             return Message.builder()
                     .content(content)
-//                    .imgUrl(imgUrl)
                     .readStatus(ReadStatus.NOT_READ)
                     .deletedBySen(false)
                     .deletedByRec(false)

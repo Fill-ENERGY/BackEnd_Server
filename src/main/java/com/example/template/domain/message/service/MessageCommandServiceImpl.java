@@ -9,16 +9,23 @@ import com.example.template.domain.message.entity.enums.ParticipationStatus;
 import com.example.template.domain.message.entity.enums.ReadStatus;
 import com.example.template.domain.message.exception.MessageErrorCode;
 import com.example.template.domain.message.exception.MessageException;
+import com.example.template.domain.message.repository.MessageImgRepository;
 import com.example.template.domain.message.repository.MessageParticipantRepository;
 import com.example.template.domain.message.repository.MessageRepository;
 import com.example.template.domain.message.repository.MessageThreadRepository;
+import com.example.template.global.config.aws.S3Manager;
+import com.example.template.global.util.s3.entity.Uuid;
+import com.example.template.global.util.s3.repository.UuidRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,9 +37,12 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     private final MessageRepository messageRepository;
     private final MessageThreadRepository messageThreadRepository;
     private final MessageParticipantRepository messageParticipantRepository;
+    private final MessageImgRepository messageImgRepository;
+    private final UuidRepository uuidRepository;
+    private final S3Manager s3Manager;
 
     @Override
-    public MessageResponseDTO.MessageDTO createMessage(MessageRequestDTO.CreateMessageDTO requestDTO) {
+    public MessageResponseDTO.MessageDTO createMessage(List<MultipartFile> files, MessageRequestDTO.CreateMessageDTO requestDTO) {
         // TODO 현재 로그인한 멤버 정보 받아오기, 멤버 관련 예외 처리로 변경하기
         Member sender = memberRepository.findById(1L)
                 .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
@@ -43,9 +53,11 @@ public class MessageCommandServiceImpl implements MessageCommandService {
         MessageThread messageThread = getOrCreateMessageThread(requestDTO.getThreadId(), sender, receiver);
         
         // 쪽지 생성
-        // TODO S3 구현 후 사진 저장 로직 추가 예정
-        Message message = requestDTO.toEntity(sender, receiver, messageThread);
+        Message message = requestDTO.toEntity(sender, receiver,messageThread);
         Message savedMessage = messageRepository.save(message);
+
+        // S3에 이미지 업로드
+        uploadMessageImages(files, savedMessage);
 
         return MessageResponseDTO.MessageDTO.from(savedMessage);
     }
@@ -74,6 +86,39 @@ public class MessageCommandServiceImpl implements MessageCommandService {
                 .participationStatus(ParticipationStatus.ACTIVE)
                 .build();
         messageParticipantRepository.save(messageParticipant);
+    }
+
+    private void uploadMessageImages(List<MultipartFile> files, Message message) {
+        if (files != null && !files.isEmpty()) {
+            // UUID 생성 및 저장
+            List<Uuid> savedUuids = new ArrayList<>();
+            for (MultipartFile file : files) {
+                if (file != null && !file.isEmpty()) {
+                    String uuid = UUID.randomUUID().toString();
+                    Uuid savedUuid = uuidRepository.save(Uuid.builder().uuid(uuid).build());
+                    savedUuids.add(savedUuid);
+                }
+            }
+
+            // S3 키 이름 생성
+            List<String> keyNames = savedUuids.stream()
+                    .map(s3Manager::generateMessageKeyName)
+                    .collect(Collectors.toList());
+
+            // 파일 업로드 및 URL 반환
+            List<String> imgUrls = s3Manager.uploadFiles(keyNames, files);
+
+            for (String imgUrl : imgUrls) {
+                MessageImg messageImg = MessageImg.builder()
+                        .imgUrl(imgUrl)
+                        .message(message)
+                        .build();
+                messageImgRepository.save(messageImg);
+                message.getImages().add(messageImg);
+            }
+
+            messageRepository.save(message);
+        }
     }
 
     @Override
@@ -163,4 +208,5 @@ public class MessageCommandServiceImpl implements MessageCommandService {
         }
         return otherParticipant;
     }
+
 }

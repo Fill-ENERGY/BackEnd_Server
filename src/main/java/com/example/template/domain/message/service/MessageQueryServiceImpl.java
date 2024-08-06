@@ -4,6 +4,8 @@ import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.domain.message.dto.response.MessageResponseDTO;
 import com.example.template.domain.message.entity.*;
+import com.example.template.domain.message.entity.enums.ParticipationStatus;
+import com.example.template.domain.message.entity.enums.ReadStatus;
 import com.example.template.domain.message.exception.MessageErrorCode;
 import com.example.template.domain.message.exception.MessageException;
 import com.example.template.domain.message.repository.MessageParticipantRepository;

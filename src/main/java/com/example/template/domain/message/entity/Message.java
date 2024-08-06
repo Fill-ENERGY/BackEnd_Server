@@ -45,6 +45,7 @@ public class Message extends BaseEntity {
     @JoinColumn(name = "message_thread_id")
     private MessageThread messageThread;
 
+    @Builder.Default
     @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MessageImg> images = new ArrayList<>();
 
