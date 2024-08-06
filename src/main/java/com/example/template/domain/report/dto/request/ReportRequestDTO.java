@@ -26,7 +26,7 @@ public class ReportRequestDTO {
     }
     @Builder
     @Getter
-    public class DeleteReportDTO {
+    public static class DeleteReportDTO {
         private ReportType reportType;
         private Long targetId;
     }
