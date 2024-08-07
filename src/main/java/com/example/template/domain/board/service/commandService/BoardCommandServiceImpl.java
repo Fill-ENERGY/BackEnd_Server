@@ -3,18 +3,28 @@ package com.example.template.domain.board.service.commandService;
 import com.example.template.domain.board.dto.request.BoardRequestDTO;
 import com.example.template.domain.board.dto.response.BoardResponseDTO;
 import com.example.template.domain.board.entity.Board;
+import com.example.template.domain.board.entity.BoardImg;
 import com.example.template.domain.board.entity.BoardLike;
 import com.example.template.domain.board.entity.enums.Category;
 import com.example.template.domain.board.exception.BoardErrorCode;
 import com.example.template.domain.board.exception.BoardException;
+import com.example.template.domain.board.repository.BoardImgRepository;
 import com.example.template.domain.board.repository.BoardLikeRepository;
 import com.example.template.domain.board.repository.BoardRepository;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.member.repository.MemberRepository;
+import com.example.template.global.config.aws.S3Manager;
+import com.example.template.global.util.s3.entity.Uuid;
+import com.example.template.global.util.s3.repository.UuidRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -24,12 +34,61 @@ public class BoardCommandServiceImpl implements BoardCommandService {
 
     private final BoardRepository boardRepository;
     private final BoardLikeRepository boardLikeRepository;
+    private final BoardImgRepository boardImgRepository;
     private final MemberRepository memberRepository;
+    private final UuidRepository uuidRepository;
+    private final S3Manager s3Manager;
+
+    @Override
+    public BoardResponseDTO.BoardImgDTO uploadImages(List<MultipartFile> images) {
+        List<String> keyNames = new ArrayList<>();
+        List<Uuid> uuids = new ArrayList<>();
+
+        // UUID 생성 및 키 이름 생성
+        for (MultipartFile image : images) {
+            if (image != null && !image.isEmpty()) {
+                String uuid = UUID.randomUUID().toString();
+                Uuid savedUuid = Uuid.builder().uuid(uuid).build();
+                uuids.add(savedUuid);
+                keyNames.add(s3Manager.generateBoardKeyName(savedUuid));
+            }
+        }
+
+        // UUID 일괄 저장
+        uuidRepository.saveAll(uuids);
+
+        // S3에 파일 일괄 업로드
+        List<String> imageUrls = s3Manager.uploadFiles(keyNames, images);
+
+        // BoardImg 엔티티 생성 및 저장 (Board와 연결하지 않음)
+        List<BoardImg> boardImgs = imageUrls.stream()
+                .map(url -> BoardImg.builder().boardImgUrl(url).build())
+                .toList();
+        boardImgRepository.saveAll(boardImgs);
+
+        // BoardImgDTO 생성 및 반환
+        return BoardResponseDTO.BoardImgDTO.builder()
+                .images(imageUrls)
+                .build();
+    }
 
     @Override
     public BoardResponseDTO.BoardDTO createBoard(BoardRequestDTO.CreateBoardDTO createBoardDTO) {
         Member member = getMockMember();
         Board board = createBoardDTO.toEntity(member);
+
+        if (createBoardDTO.getImages() != null && !createBoardDTO.getImages().isEmpty()) {
+            List<BoardImg> boardImgs = boardImgRepository.findAllByBoardImgUrlIn(createBoardDTO.getImages());
+
+            // S3에 등록되지 않은 이미지를 가지고 접근
+            if (boardImgs.size() != createBoardDTO.getImages().size()) {
+                throw new BoardException(BoardErrorCode.INVALID_IMAGE_URLS);
+            }
+
+            boardImgs.forEach(img -> img.setBoard(board));
+            boardImgRepository.saveAll(boardImgs);
+        }
+
         Board savedBoard = boardRepository.save(board);
         return BoardResponseDTO.BoardDTO.from(savedBoard, member.getId());
     }
@@ -40,8 +99,53 @@ public class BoardCommandServiceImpl implements BoardCommandService {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
         validateBoardOwnership(board, member);
+
+        // 게시글 기본 정보 업데이트
         board.update(updateBoardDTO.getTitle(), updateBoardDTO.getContent(), updateBoardDTO.getCategory());
-        return BoardResponseDTO.BoardDTO.from(board, member.getId());
+
+        // 이미지 처리
+        if (updateBoardDTO.getImages() != null) {
+            // 현재 게시글의 이미지 URL 목록
+            List<String> currentImageUrls = board.getImages().stream()
+                    .map(BoardImg::getBoardImgUrl)
+                    .toList();
+
+            // 새로 제공된 이미지 URL 목록
+            List<String> newImageUrls = updateBoardDTO.getImages();
+
+            // 제거할 이미지 찾기
+            List<BoardImg> imagesToRemove = board.getImages().stream()
+                    .filter(img -> !newImageUrls.contains(img.getBoardImgUrl()))
+                    .toList();
+
+            // 추가할 이미지 URL 찾기
+            List<String> imagesToAdd = newImageUrls.stream()
+                    .filter(url -> !currentImageUrls.contains(url))
+                    .toList();
+
+            // 이미지 제거
+            imagesToRemove.forEach(img -> {
+                board.getImages().remove(img);
+                boardImgRepository.delete(img); // DB에서 삭제
+                s3Manager.deleteFile(img.getBoardImgUrl()); // S3에서도 삭제
+            });
+
+            // 새 이미지 추가
+            if (!imagesToAdd.isEmpty()) {
+                List<BoardImg> newBoardImgs = boardImgRepository.findAllByBoardImgUrlIn(imagesToAdd);
+
+                // S3에 등록되지 않은 이미지를 가지고 접근
+                if (newBoardImgs.size() != imagesToAdd.size()) {
+                    throw new BoardException(BoardErrorCode.INVALID_IMAGE_URLS);
+                }
+
+                newBoardImgs.forEach(img -> img.setBoard(board));
+                boardImgRepository.saveAll(newBoardImgs);
+            }
+        }
+
+        Board updatedBoard = boardRepository.save(board);
+        return BoardResponseDTO.BoardDTO.from(updatedBoard, member.getId());
     }
 
     @Override
@@ -50,6 +154,19 @@ public class BoardCommandServiceImpl implements BoardCommandService {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
         validateBoardOwnership(board, member);
+
+        // 연관된 이미지 처리
+        List<BoardImg> images = board.getImages();
+        if (!images.isEmpty()) {
+            // S3에서 이미지 파일 삭제 (옵션)
+            for (BoardImg image : images) {
+                s3Manager.deleteFile(image.getBoardImgUrl());
+            }
+            // 데이터베이스에서 BoardImg 엔티티 삭제
+            boardImgRepository.deleteAll(images);
+        }
+
+        // 게시글 삭제
         boardRepository.delete(board);
         return boardId;
     }

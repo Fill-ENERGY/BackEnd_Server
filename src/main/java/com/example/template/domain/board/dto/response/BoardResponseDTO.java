@@ -12,7 +12,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class BoardResponseDTO {
+
     @Getter
+    @Builder
+    public static class BoardImgDTO {
+        private List<String> images;
+    }
+
+
+        @Getter
     @Builder
     public static class BoardDTO {
         private Long id;

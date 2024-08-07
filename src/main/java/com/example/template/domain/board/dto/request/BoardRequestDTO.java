@@ -30,7 +30,8 @@ public class BoardRequestDTO {
 
         public Board toEntity(Member member) {
             HelpStatus helpStatus = this.category == Category.HELP ? HelpStatus.REQUESTED : HelpStatus.NONE;
-            Board board = Board.builder()
+
+            return Board.builder()
                     .title(title)
                     .content(content)
                     .category(category)
@@ -40,17 +41,6 @@ public class BoardRequestDTO {
                     .commentCount(0)
                     .images(new ArrayList<>())
                     .build();
-
-            // images가 null이 아닌 경우 처리
-            if (images != null) {
-                for (String imageUrl : images) {
-                    BoardImg boardImg = BoardImg.builder()
-                            .boardImgUrl(imageUrl)
-                            .build();
-                    boardImg.setBoard(board);
-                }
-            }
-            return board;
         }
     }
 
