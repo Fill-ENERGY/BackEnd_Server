@@ -11,11 +11,8 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
-    Optional<Message> findTopByReceiverAndReadStatusAndDeletedByRecFalseOrderByCreatedAtDesc(Member member, ReadStatus readStatus);
-
     long countByMessageThreadAndReceiverAndReadStatusAndDeletedByRecFalse(MessageThread messageThread, Member member, ReadStatus readStatus);
 
     @Query("SELECT m FROM Message m WHERE m.messageThread = :messageThread AND " +
@@ -39,4 +36,6 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             "ORDER BY m.createdAt DESC")
     List<Message> findMessagesByMessageThreadAndMemberAndLeftAtAfter( @Param("messageThread") MessageThread messageThread,
                                                                       @Param("member") Member member, @Param("leftAt") LocalDateTime leftAt);
+
+    List<Message> findMessagesByMessageThreadAndReceiverAndReadStatus(MessageThread messageThread, Member member, ReadStatus readStatus);
 }

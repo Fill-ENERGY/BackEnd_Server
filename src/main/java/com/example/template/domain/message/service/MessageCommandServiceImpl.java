@@ -24,7 +24,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -168,13 +167,17 @@ public class MessageCommandServiceImpl implements MessageCommandService {
         MessageParticipant participant = messageParticipantRepository.findByMemberAndMessageThread(member, messageThread)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.PARTICIPANT_NOT_FOUND));
 
-        // 마지막으로 본 메시지 id 업데이트
-        Optional<Message> optionalLastViewedMessage = messageRepository.findTopByReceiverAndReadStatusAndDeletedByRecFalseOrderByCreatedAtDesc(member, ReadStatus.READ);
-        if (optionalLastViewedMessage.isPresent()) {
-            participant.leaveThread(optionalLastViewedMessage.get().getId());
-        } else {
-            participant.leaveThread(null);
+        // 받은 쪽지 중 읽지 않은 쪽지 찾기
+        List<Message> unreadMessages = messageRepository.findMessagesByMessageThreadAndReceiverAndReadStatus(messageThread, member, ReadStatus.NOT_READ);
+
+        // 읽음 상태로 업데이트
+        if (!unreadMessages.isEmpty()) {
+            unreadMessages.forEach(message -> message.updateReadStatus(ReadStatus.READ));
+            messageRepository.saveAll(unreadMessages);
         }
+
+        // 채팅방 나가기
+        participant.leaveThread();
         messageParticipantRepository.save(participant);
 
         return MessageResponseDTO.ThreadDeleteDTO.from(participant);
