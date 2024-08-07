@@ -9,6 +9,7 @@ import java.time.LocalTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Table(name = "station")
 @Entity
 public class Station {
 
