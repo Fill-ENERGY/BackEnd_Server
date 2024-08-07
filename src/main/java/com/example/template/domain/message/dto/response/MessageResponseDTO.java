@@ -71,7 +71,6 @@ public class MessageResponseDTO {
         private Long memberId;
         private String status;
         private LocalDateTime leftAt;
-        private Long lastViewedMessageId;
 
         public static ThreadDeleteDTO from(MessageParticipant participant) {
             return ThreadDeleteDTO.builder()
@@ -79,7 +78,6 @@ public class MessageResponseDTO {
                     .memberId(participant.getMember().getId())
                     .status(participant.getParticipationStatus().name())
                     .leftAt(participant.getLeftAt())
-                    .lastViewedMessageId(participant.getLastViewedMessage())
                     .build();
         }
     }

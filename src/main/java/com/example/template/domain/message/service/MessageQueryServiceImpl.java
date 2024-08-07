@@ -108,8 +108,13 @@ public class MessageQueryServiceImpl implements MessageQueryService {
         // 쪽지 상대 찾기
         Member otherParticipant = getOtherParticipant(messageThread, member);
 
-        // 쪽지 목록 조회
-        List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(messageThread, member);
+        // 채팅방 참여 상태 조회
+        MessageParticipant messageParticipant = messageParticipantRepository.findByMemberAndMessageThread(member, messageThread)
+                .orElseThrow(() -> new MessageException(MessageErrorCode.PARTICIPANT_NOT_FOUND));
+
+        // leftAt 이후의 쪽지만 조회
+        List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberAndLeftAtAfter(
+                messageThread, member, messageParticipant.getLeftAt());
 
         return MessageResponseDTO.MessageListDTO.from(messageThread, otherParticipant, messages);
     }
