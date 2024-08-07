@@ -3,6 +3,8 @@ package com.example.template.domain.member.service;
 import com.example.template.domain.func1.exception.FuncException;
 import com.example.template.domain.member.dto.ProfileResponseDTO;
 import com.example.template.domain.member.entity.Member;
+import com.example.template.domain.member.exception.MemberErrorCode;
+import com.example.template.domain.member.exception.MemberException;
 import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.global.apiPayload.code.GeneralErrorCode;
 import lombok.AllArgsConstructor;
@@ -20,5 +22,10 @@ public class MemberQueryServiceImpl implements MemberQueryService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new FuncException(GeneralErrorCode.NOT_FOUND_404));
         return ProfileResponseDTO.from(member);
+    }
+
+    @Override
+    public Member getMemberByEmail(String email) {
+        return memberRepository.findByEmail(email).orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
     }
 }

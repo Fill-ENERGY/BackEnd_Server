@@ -2,9 +2,11 @@ package com.example.template.domain.member.controller;
 
 import com.example.template.domain.member.dto.MemberRequestDTO;
 import com.example.template.domain.member.dto.MemberResponseDTO;
+import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.member.jwt.dto.JwtDTO;
 import com.example.template.domain.member.jwt.util.JwtProvider;
 import com.example.template.domain.member.service.MemberService;
+import com.example.template.global.annotation.AuthenticatedMember;
 import com.example.template.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -48,5 +50,14 @@ public class MemberController {
     public ApiResponse<JwtDTO> reissueToken(@RequestHeader("RefreshToken") String refreshToken) {
         return ApiResponse.onSuccess(memberService.reissueToken(refreshToken));
     }
+    @Operation(summary = "인증 테스트 용", description = "어노테이션 작동 테스트용 API 입니다.")
+    @GetMapping("/me")
+    public ApiResponse<MemberResponseDTO.MemberTestDTO> getCurrentMember(@AuthenticatedMember Member member) {
+        MemberResponseDTO.MemberTestDTO memberDTO = new MemberResponseDTO.MemberTestDTO(
+                member.getId(),
+                member.getEmail(),
+                member.getName()
+        );
+        return ApiResponse.onSuccess(memberDTO);}
 
 }
