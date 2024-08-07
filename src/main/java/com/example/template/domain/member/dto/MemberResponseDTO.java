@@ -45,5 +45,14 @@ public class MemberResponseDTO {
                     .build();
         }
     }
+    @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class MemberTestDTO {
+        private Long id;
+        private String email;
+        private String name;
 
+    }
 }
