@@ -4,6 +4,8 @@ import com.example.template.domain.board.dto.request.BoardRequestDTO;
 import com.example.template.domain.board.dto.response.BoardResponseDTO;
 import com.example.template.domain.board.entity.enums.Category;
 import com.example.template.domain.board.entity.enums.HelpStatus;
+import com.example.template.domain.board.entity.enums.SortType;
+import com.example.template.domain.board.scheduler.UnmappedImageCleanupScheduler;
 import com.example.template.domain.board.service.commandService.BoardCommandService;
 import com.example.template.domain.board.service.queryService.BoardQueryService;
 import com.example.template.global.apiPayload.ApiResponse;
@@ -12,9 +14,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 
 
 @Slf4j
@@ -25,6 +30,33 @@ public class BoardController {
 
     private final BoardQueryService boardQueryService;
     private final BoardCommandService boardCommandService;
+    private final UnmappedImageCleanupScheduler unmappedImageCleanupScheduler;
+
+    // TODO : 테스트용 수동 트리거 컨트롤러 - 삭제 예정
+    @Operation(summary = "테스트용 수동 트리거", description = "board와 매핑이 안된 baordimg를 삭제합니다.")
+    @PostMapping("/cleanupUnmappedImages")
+    public ApiResponse<String> cleanupUnmappedImages() {
+        unmappedImageCleanupScheduler.manualCleanup();
+        return ApiResponse.onSuccess("삭제 완료");
+    }
+
+    @Operation(summary = "이미지 업로드", description = "게시글에 첨부할 이미지를 업로드합니다.")
+    @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<BoardResponseDTO.BoardImgDTO> uploadImages(
+            @RequestPart("images") List<MultipartFile> images) {
+        return ApiResponse.onSuccess(boardCommandService.uploadImages(images));
+    }
+
+    @Operation(summary = "게시글 목록 조회 (전체 및 카테고리별)", description = "커뮤니티 게시글 목록을 전체 또는 카테고리별로 무한 스크롤 방식으로 조회합니다..")
+    @GetMapping
+    public ApiResponse<BoardResponseDTO.BoardListDTO> getBoardList(
+            @RequestParam(required = false) Category category,
+            @RequestParam(defaultValue = "0") Long cursor,
+            @RequestParam(defaultValue = "10") Integer limit,
+            @RequestParam(defaultValue = "LATEST") SortType sort) {
+
+        return ApiResponse.onSuccess(boardQueryService.getBoardList(category, cursor, limit, sort));
+    }
 
     @Operation(summary = "게시글 상세 조회", description = "지정된 ID의 게시글 상세 정보를 조회합니다.")
     @GetMapping("/{boardId}")
