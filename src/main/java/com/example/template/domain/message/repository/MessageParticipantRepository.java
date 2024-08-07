@@ -3,7 +3,7 @@ package com.example.template.domain.message.repository;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.message.entity.MessageParticipant;
 import com.example.template.domain.message.entity.MessageThread;
-import com.example.template.domain.message.entity.ParticipationStatus;
+import com.example.template.domain.message.entity.enums.ParticipationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

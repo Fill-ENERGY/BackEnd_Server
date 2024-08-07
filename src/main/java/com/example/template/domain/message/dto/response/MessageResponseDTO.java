@@ -2,6 +2,7 @@ package com.example.template.domain.message.dto.response;
 
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.message.entity.Message;
+import com.example.template.domain.message.entity.MessageImg;
 import com.example.template.domain.message.entity.MessageParticipant;
 import com.example.template.domain.message.entity.MessageThread;
 import lombok.AllArgsConstructor;
@@ -20,19 +21,19 @@ public class MessageResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class MessageDTO {
-        Long messageId;
-        String content;
-        String imgUrl;
-        Long sender;
-        Long receiver;
-        String readStatus;
-        LocalDateTime createdAt;
+        private Long messageId;
+        private String content;
+        private List<String> images;
+        private Long sender;
+        private Long receiver;
+        private String readStatus;
+        private LocalDateTime createdAt;
 
         public static MessageDTO from(Message message) {
             return MessageDTO.builder()
                     .messageId(message.getId())
                     .content(message.getContent())
-                    .imgUrl(message.getImgUrl())
+                    .images(message.getImages().stream().map(MessageImg::getImgUrl).toList())
                     .sender(message.getSender().getId())
                     .receiver(message.getReceiver().getId())
                     .readStatus(message.getReadStatus().name())
@@ -46,10 +47,10 @@ public class MessageResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class MessageDeleteDTO {
-        Long messageId;
-        boolean deletedBySender;
-        boolean deletedByReceiver;
-        LocalDateTime updatedAt;
+        private Long messageId;
+        private boolean deletedBySender;
+        private boolean deletedByReceiver;
+        private LocalDateTime updatedAt;
 
         public static MessageDeleteDTO from(Message message) {
             return MessageDeleteDTO.builder()
@@ -66,11 +67,10 @@ public class MessageResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ThreadDeleteDTO {
-        Long threadId;
-        Long memberId;
-        String status;
-        LocalDateTime leftAt;
-        Long lastViewedMessageId;
+        private Long threadId;
+        private Long memberId;
+        private String status;
+        private LocalDateTime leftAt;
 
         public static ThreadDeleteDTO from(MessageParticipant participant) {
             return ThreadDeleteDTO.builder()
@@ -78,7 +78,6 @@ public class MessageResponseDTO {
                     .memberId(participant.getMember().getId())
                     .status(participant.getParticipationStatus().name())
                     .leftAt(participant.getLeftAt())
-                    .lastViewedMessageId(participant.getLastViewedMessage())
                     .build();
         }
     }
@@ -88,12 +87,12 @@ public class MessageResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ThreadListDTO {
-        Long threadId;
-        String name;
-        String email;
-        String profileImg;
-        RecentMessage recentMessage;
-        int unreadMessageCount;
+        private Long threadId;
+        private String name;
+        private String email;
+        private String profileImg;
+        private RecentMessage recentMessage;
+        private int unreadMessageCount;
 
         public static ThreadListDTO of(MessageParticipant participant, RecentMessage recentMessage,
                                        int unreadMessageCount, Member otherMember) {
@@ -113,16 +112,14 @@ public class MessageResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class RecentMessage {
-        Long messageId;
-        String content;
-        String imgUrl;
-        LocalDateTime createdAt;
+        private Long messageId;
+        private String content;
+        private LocalDateTime createdAt;
 
         public static RecentMessage from(Message message) {
             return RecentMessage.builder()
                     .messageId(message.getId())
-                    .content(message.getContent())
-                    .imgUrl(message.getImgUrl())
+                    .content(message.getContent() == null || message.getContent().isEmpty() ? "사진을 전송했습니다." : message.getContent())
                     .createdAt(message.getCreatedAt())
                     .build();
         }
@@ -133,11 +130,11 @@ public class MessageResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class MessageListDTO {
-        Long threadId;
-        String name;
-        String email;
-        String profileImg;
-        List<MessageDTO> messages;
+        private Long threadId;
+        private String name;
+        private String email;
+        private String profileImg;
+        private List<MessageDTO> messages;
 
         public static MessageListDTO from(MessageThread thread, Member otherParticipant, List<Message> messages) {
             List<MessageDTO> messageDTOs = messages.stream()
@@ -154,4 +151,17 @@ public class MessageResponseDTO {
         }
     }
 
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ThreadDTO {
+        private Long threadId;
+
+        public static ThreadDTO from(MessageThread thread) {
+            return ThreadDTO.builder()
+                    .threadId(thread.getId())
+                    .build();
+        }
+    }
 }

@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 public class MessageException extends GeneralException {
-    public MessageException(BaseErrorCode errorCode) {
+    public MessageException(MessageErrorCode errorCode) {
         super(errorCode);
     }
 }

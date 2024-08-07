@@ -8,7 +8,9 @@ import com.example.template.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -20,10 +22,11 @@ public class MessageController {
     private final MessageCommandService messageCommandService;
     private final MessageQueryService messageQueryService;
 
-    @PostMapping("/messages")
+    @PostMapping(value = "/messages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "쪽지 생성 API")
-    public ApiResponse<MessageResponseDTO.MessageDTO> createMessage(@Valid @RequestBody MessageRequestDTO.CreateMessageDTO requestDTO) {
-        MessageResponseDTO.MessageDTO messageDTO = messageCommandService.createMessage(requestDTO);
+    public ApiResponse<MessageResponseDTO.MessageDTO> createMessage(@RequestPart(value = "file", required = false) List<MultipartFile> files,
+                                                                    @Valid @RequestPart("requestDTO") MessageRequestDTO.CreateMessageDTO requestDTO) {
+        MessageResponseDTO.MessageDTO messageDTO = messageCommandService.createMessage(files, requestDTO);
         return ApiResponse.onSuccess(messageDTO);
     }
 
@@ -46,6 +49,14 @@ public class MessageController {
     public ApiResponse<MessageResponseDTO.MessageListDTO> updateMessageList(@PathVariable("threadId") Long threadId) {
         MessageResponseDTO.MessageListDTO messageListDTO= messageCommandService.updateMessageList(threadId);
         return ApiResponse.onSuccess(messageListDTO);
+    }
+
+    @GetMapping("/threads/members/{memberId}")
+    @Operation(summary = "채팅방 조회 API (커뮤니티 > 채팅하기)", description = "게시글 작성자의 id를 전달해주세요.\n\n" +
+            "커뮤니티에서 채팅하기를 클릭하는 경우, 게시글 작성자와의 채팅방이 존재하는지 조회합니다.\n\n" + "존재하면 채팅방 id를, 존재하지 않으면 null을 반환합니다.")
+    public ApiResponse<MessageResponseDTO.ThreadDTO> getThread(@PathVariable("memberId") Long writerId) {
+        MessageResponseDTO.ThreadDTO threadDTO = messageQueryService.getThread(writerId);
+        return ApiResponse.onSuccess(threadDTO);
     }
 
     @GetMapping("/threads")

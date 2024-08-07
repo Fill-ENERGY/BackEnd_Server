@@ -5,18 +5,26 @@ import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.domain.message.dto.request.MessageRequestDTO;
 import com.example.template.domain.message.dto.response.MessageResponseDTO;
 import com.example.template.domain.message.entity.*;
+import com.example.template.domain.message.entity.enums.ParticipationStatus;
+import com.example.template.domain.message.entity.enums.ReadStatus;
 import com.example.template.domain.message.exception.MessageErrorCode;
 import com.example.template.domain.message.exception.MessageException;
+import com.example.template.domain.message.repository.MessageImgRepository;
 import com.example.template.domain.message.repository.MessageParticipantRepository;
 import com.example.template.domain.message.repository.MessageRepository;
 import com.example.template.domain.message.repository.MessageThreadRepository;
+import com.example.template.global.config.aws.S3Manager;
+import com.example.template.global.util.s3.entity.Uuid;
+import com.example.template.global.util.s3.repository.UuidRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,46 +36,104 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     private final MessageRepository messageRepository;
     private final MessageThreadRepository messageThreadRepository;
     private final MessageParticipantRepository messageParticipantRepository;
+    private final MessageImgRepository messageImgRepository;
+    private final UuidRepository uuidRepository;
+    private final S3Manager s3Manager;
 
     @Override
-    public MessageResponseDTO.MessageDTO createMessage(MessageRequestDTO.CreateMessageDTO requestDTO) {
+    public MessageResponseDTO.MessageDTO createMessage(List<MultipartFile> files, MessageRequestDTO.CreateMessageDTO requestDTO) {
         // TODO 현재 로그인한 멤버 정보 받아오기, 멤버 관련 예외 처리로 변경하기
         Member sender = memberRepository.findById(1L)
                 .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
         Member receiver = memberRepository.findById(requestDTO.getReceiverId())
                 .orElseThrow(() -> new EntityNotFoundException("Receiver not found"));
 
-        MessageThread messageThread = null;
-        if (requestDTO.getThreadId() != null) { // 채팅방이 존재하는 경우
-            messageThread = messageThreadRepository.findById(requestDTO.getThreadId())
+        // 채팅방 조회 또는 생성
+        MessageThread messageThread = getOrCreateMessageThread(requestDTO.getThreadId(), sender, receiver);
+        
+        // 쪽지 생성
+        Message message = requestDTO.toEntity(sender, receiver,messageThread);
+        Message savedMessage = messageRepository.save(message);
+
+        // S3에 이미지 업로드
+        uploadMessageImages(files, savedMessage);
+
+        return MessageResponseDTO.MessageDTO.from(savedMessage);
+    }
+
+    private MessageThread getOrCreateMessageThread(Long threadId, Member sender, Member receiver) {
+        if (threadId != null) { // 채팅방이 존재하는 경우
+            MessageThread messageThread = messageThreadRepository.findById(threadId)
                     .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
+
+            // 쪽지 전송자 또는 수신자가 채팅방을 나간 경우, 참여 상태를 다시 ACTIVE로 업데이트
+            updateParticipantStatusToActive(messageThread, sender);
+            updateParticipantStatusToActive(messageThread, receiver);
+
+            return messageThread;
         } else {    // 채팅방이 존재하지 않는 경우(첫 쪽지)
             // 채팅방 생성
             MessageThread newMessageThread = MessageThread.builder().build();
-            messageThread = messageThreadRepository.save(newMessageThread);
+            MessageThread savedMessageThread = messageThreadRepository.save(newMessageThread);
 
             // 참여자 생성
-            MessageParticipant senderParticipant = MessageParticipant.builder()
-                    .member(sender)
-                    .messageThread(messageThread)
-                    .participationStatus(ParticipationStatus.ACTIVE)
-                    .build();
-            messageParticipantRepository.save(senderParticipant);
+            createMessageParticipant(savedMessageThread, sender);
+            createMessageParticipant(savedMessageThread, receiver);
 
-            MessageParticipant receiverParticipant = MessageParticipant.builder()
-                    .member(receiver)
-                    .messageThread(messageThread)
-                    .participationStatus(ParticipationStatus.ACTIVE)
-                    .build();
-            messageParticipantRepository.save(receiverParticipant);
+            return savedMessageThread;
         }
+    }
 
-        // 쪽지 생성
-        // TODO S3 구현 후 사진 저장 로직 추가 예정
-        Message message = requestDTO.toEntity(sender, receiver, messageThread);
-        Message savedMessage = messageRepository.save(message);
+    private void updateParticipantStatusToActive(MessageThread messageThread, Member member) {
+        MessageParticipant messageParticipant = messageParticipantRepository.findByMemberAndMessageThread(member, messageThread)
+                .orElseThrow(() -> new MessageException(MessageErrorCode.PARTICIPANT_NOT_FOUND));
 
-        return MessageResponseDTO.MessageDTO.from(savedMessage);
+        if (messageParticipant.getParticipationStatus() == ParticipationStatus.LEFT) {
+            messageParticipant.updateParticipationStatus(ParticipationStatus.ACTIVE);
+            messageParticipantRepository.save(messageParticipant);
+        }
+    }
+
+    private void createMessageParticipant(MessageThread messageThread, Member member) {
+        MessageParticipant messageParticipant = MessageParticipant.builder()
+                .member(member)
+                .messageThread(messageThread)
+                .participationStatus(ParticipationStatus.ACTIVE)
+                .build();
+        messageParticipantRepository.save(messageParticipant);
+    }
+
+    private void uploadMessageImages(List<MultipartFile> files, Message message) {
+        if (files != null && !files.isEmpty()) {
+            // UUID 생성 및 저장
+            List<Uuid> savedUuids = new ArrayList<>();
+            for (MultipartFile file : files) {
+                if (file != null && !file.isEmpty()) {
+                    String uuid = UUID.randomUUID().toString();
+                    Uuid savedUuid = uuidRepository.save(Uuid.builder().uuid(uuid).build());
+                    savedUuids.add(savedUuid);
+                }
+            }
+
+            // S3 키 이름 생성
+            List<String> keyNames = savedUuids.stream()
+                    .map(s3Manager::generateMessageKeyName)
+                    .collect(Collectors.toList());
+
+            // 파일 업로드 및 URL 반환
+            List<String> imgUrls = s3Manager.uploadFiles(keyNames, files);
+
+            for (String imgUrl : imgUrls) {
+                MessageImg messageImg = MessageImg.builder()
+                        .imgUrl(imgUrl)
+                        .message(message)
+                        .build();
+                messageImgRepository.save(messageImg);
+                message.getImages().add(messageImg);
+            }
+
+            messageRepository.save(message);
+        }
     }
 
     @Override
@@ -101,13 +167,17 @@ public class MessageCommandServiceImpl implements MessageCommandService {
         MessageParticipant participant = messageParticipantRepository.findByMemberAndMessageThread(member, messageThread)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.PARTICIPANT_NOT_FOUND));
 
-        // 마지막으로 본 메시지 id 업데이트
-        Optional<Message> optionalLastViewedMessage = messageRepository.findTopByReceiverAndReadStatusAndDeletedByRecFalseOrderByCreatedAtDesc(member, ReadStatus.READ);
-        if (optionalLastViewedMessage.isPresent()) {
-            participant.leaveThread(optionalLastViewedMessage.get().getId());
-        } else {
-            participant.leaveThread(null);
+        // 받은 쪽지 중 읽지 않은 쪽지 찾기
+        List<Message> unreadMessages = messageRepository.findMessagesByMessageThreadAndReceiverAndReadStatus(messageThread, member, ReadStatus.NOT_READ);
+
+        // 읽음 상태로 업데이트
+        if (!unreadMessages.isEmpty()) {
+            unreadMessages.forEach(message -> message.updateReadStatus(ReadStatus.READ));
+            messageRepository.saveAll(unreadMessages);
         }
+
+        // 채팅방 나가기
+        participant.leaveThread();
         messageParticipantRepository.save(participant);
 
         return MessageResponseDTO.ThreadDeleteDTO.from(participant);
@@ -157,4 +227,5 @@ public class MessageCommandServiceImpl implements MessageCommandService {
         }
         return otherParticipant;
     }
+
 }

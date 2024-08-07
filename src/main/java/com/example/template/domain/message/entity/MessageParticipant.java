@@ -1,6 +1,7 @@
 package com.example.template.domain.message.entity;
 
 import com.example.template.domain.member.entity.Member;
+import com.example.template.domain.message.entity.enums.ParticipationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,8 +26,7 @@ public class MessageParticipant {
     @Column(name = "left_at")
     private LocalDateTime leftAt;   // 나간 시간
 
-    @Column(name = "last_viewed_message")
-    private Long lastViewedMessage; // 마지막으로 본 메시지 ID
+    // TODO 마지막으로 본 쪽지 id 필드 삭제 - leftAt으로 나간 시간 이후 받은 쪽지만 필터링 가능
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
@@ -36,9 +36,12 @@ public class MessageParticipant {
     @JoinColumn(name = "message_thread_id")
     private MessageThread messageThread;
 
-    public void leaveThread(Long lastViewedMessage) {
+    public void leaveThread() {
         this.participationStatus = ParticipationStatus.LEFT;
         this.leftAt = LocalDateTime.now();
-        this.lastViewedMessage = lastViewedMessage;
+    }
+
+    public void updateParticipationStatus(ParticipationStatus participationStatus) {
+        this.participationStatus = participationStatus;
     }
 }

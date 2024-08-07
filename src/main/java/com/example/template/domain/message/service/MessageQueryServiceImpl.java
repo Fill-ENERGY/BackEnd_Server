@@ -1,9 +1,13 @@
 package com.example.template.domain.message.service;
 
 import com.example.template.domain.member.entity.Member;
+import com.example.template.domain.member.exception.MemberErrorCode;
+import com.example.template.domain.member.exception.MemberException;
 import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.domain.message.dto.response.MessageResponseDTO;
 import com.example.template.domain.message.entity.*;
+import com.example.template.domain.message.entity.enums.ParticipationStatus;
+import com.example.template.domain.message.entity.enums.ReadStatus;
 import com.example.template.domain.message.exception.MessageErrorCode;
 import com.example.template.domain.message.exception.MessageException;
 import com.example.template.domain.message.repository.MessageParticipantRepository;
@@ -71,6 +75,29 @@ public class MessageQueryServiceImpl implements MessageQueryService {
     }
 
     @Override
+    public MessageResponseDTO.ThreadDTO getThread(Long writerId) {
+        Member member = memberRepository.findById(1L)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+        Member writer = memberRepository.findById(writerId)
+                .orElseThrow(() -> new MessageException(MessageErrorCode.OTHER_PARTICIPANT_NOT_FOUND));
+
+        // 자기 자신과의 채팅방을 조회하는 경우
+        if(member.equals(writer)) {
+            throw new MessageException(MessageErrorCode.SELF_MESSAGE_NOT_ALLOWED);
+        }
+
+        // 게시글 작성자와의 채팅방이 존재하는지 조회
+        MessageThread messageThread = messageThreadRepository.findByParticipantsMember(member, writer)
+                .orElse(null);
+
+        if (messageThread != null) {
+            return MessageResponseDTO.ThreadDTO.from(messageThread);
+        } else {
+            return MessageResponseDTO.ThreadDTO.builder().threadId(null).build();
+        }
+    }
+
+    @Override
     public MessageResponseDTO.MessageListDTO getMessageList(Long threadId) {
         // TODO 현재 로그인한 멤버 정보 받아오기
         Member member = memberRepository.findById(1L)
@@ -81,8 +108,13 @@ public class MessageQueryServiceImpl implements MessageQueryService {
         // 쪽지 상대 찾기
         Member otherParticipant = getOtherParticipant(messageThread, member);
 
-        // 쪽지 목록 조회
-        List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(messageThread, member);
+        // 채팅방 참여 상태 조회
+        MessageParticipant messageParticipant = messageParticipantRepository.findByMemberAndMessageThread(member, messageThread)
+                .orElseThrow(() -> new MessageException(MessageErrorCode.PARTICIPANT_NOT_FOUND));
+
+        // leftAt 이후의 쪽지만 조회
+        List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberAndLeftAtAfter(
+                messageThread, member, messageParticipant.getLeftAt());
 
         return MessageResponseDTO.MessageListDTO.from(messageThread, otherParticipant, messages);
     }

@@ -1,9 +1,13 @@
 package com.example.template.domain.message.entity;
 
 import com.example.template.domain.member.entity.Member;
+import com.example.template.domain.message.entity.enums.ReadStatus;
 import com.example.template.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Builder
 @Getter
@@ -18,9 +22,6 @@ public class Message extends BaseEntity {
     private Long id;
 
     private String content; // 내용
-
-    @Column(name = "img_url")
-    private String imgUrl;    // 사진 경로
 
     @Enumerated(EnumType.STRING)
     @Column(name = "read_status", nullable = false)
@@ -43,6 +44,10 @@ public class Message extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "message_thread_id")
     private MessageThread messageThread;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MessageImg> images = new ArrayList<>();
 
     public void updateDeletedBySender(boolean deleted) {
         this.deletedBySen = deleted;

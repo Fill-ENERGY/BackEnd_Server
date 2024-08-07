@@ -9,5 +9,7 @@ public interface MessageQueryService {
 
     List<MessageResponseDTO.ThreadListDTO> getThreadList();
 
+    MessageResponseDTO.ThreadDTO getThread(Long writerId);
+
     MessageResponseDTO.MessageListDTO getMessageList(Long threadId);
 }
