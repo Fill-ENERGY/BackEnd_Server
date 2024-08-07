@@ -1,6 +1,8 @@
 package com.example.template.domain.message.service;
 
 import com.example.template.domain.member.entity.Member;
+import com.example.template.domain.member.exception.MemberErrorCode;
+import com.example.template.domain.member.exception.MemberException;
 import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.domain.message.dto.response.MessageResponseDTO;
 import com.example.template.domain.message.entity.*;
@@ -70,6 +72,29 @@ public class MessageQueryServiceImpl implements MessageQueryService {
                     return MessageResponseDTO.ThreadListDTO.of(participant, recentMessage, (int) unreadMessageCount, otherParticipant);
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public MessageResponseDTO.ThreadDTO getThread(Long writerId) {
+        Member member = memberRepository.findById(1L)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+        Member writer = memberRepository.findById(writerId)
+                .orElseThrow(() -> new MessageException(MessageErrorCode.OTHER_PARTICIPANT_NOT_FOUND));
+
+        // 자기 자신과의 채팅방을 조회하는 경우
+        if(member.equals(writer)) {
+            throw new MessageException(MessageErrorCode.SELF_MESSAGE_NOT_ALLOWED);
+        }
+
+        // 게시글 작성자와의 채팅방이 존재하는지 조회
+        MessageThread messageThread = messageThreadRepository.findByParticipantsMember(member, writer)
+                .orElse(null);
+
+        if (messageThread != null) {
+            return MessageResponseDTO.ThreadDTO.from(messageThread);
+        } else {
+            return MessageResponseDTO.ThreadDTO.builder().threadId(null).build();
+        }
     }
 
     @Override

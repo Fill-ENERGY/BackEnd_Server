@@ -51,6 +51,14 @@ public class MessageController {
         return ApiResponse.onSuccess(messageListDTO);
     }
 
+    @GetMapping("/threads/members/{memberId}")
+    @Operation(summary = "채팅방 조회 API (커뮤니티 > 채팅하기)", description = "게시글 작성자의 id를 전달해주세요.\n\n" +
+            "커뮤니티에서 채팅하기를 클릭하는 경우, 게시글 작성자와의 채팅방이 존재하는지 조회합니다.\n\n" + "존재하면 채팅방 id를, 존재하지 않으면 null을 반환합니다.")
+    public ApiResponse<MessageResponseDTO.ThreadDTO> getThread(@PathVariable("memberId") Long writerId) {
+        MessageResponseDTO.ThreadDTO threadDTO = messageQueryService.getThread(writerId);
+        return ApiResponse.onSuccess(threadDTO);
+    }
+
     @GetMapping("/threads")
     @Operation(summary = "채팅방 목록 조회 API")
     public ApiResponse<List<MessageResponseDTO.ThreadListDTO>> getThreadList() {

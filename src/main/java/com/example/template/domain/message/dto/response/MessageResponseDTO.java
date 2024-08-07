@@ -153,4 +153,17 @@ public class MessageResponseDTO {
         }
     }
 
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ThreadDTO {
+        private Long threadId;
+
+        public static ThreadDTO from(MessageThread thread) {
+            return ThreadDTO.builder()
+                    .threadId(thread.getId())
+                    .build();
+        }
+    }
 }
