@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 public class BlockResponseDTO {
 
     @Builder
@@ -16,12 +18,18 @@ public class BlockResponseDTO {
         Long blockId;
         Long memberId;  // 멤버 아이디
         Long targetMemberId;    // 차단 대상 멤버 아이디
+        String name;    // 차단 대상 멤버 이름
+        String email;   // 차단 대상 멤버 이메일
+        String profileImg;  // 차단 대상 멤버 프로필 이미지
 
         public static BlockDTO from(Block block) {
             return BlockDTO.builder()
                     .blockId(block.getId())
                     .memberId(block.getMember().getId())
                     .targetMemberId(block.getTargetMember().getId())
+                    .name(block.getTargetMember().getName())
+                    .email(block.getTargetMember().getEmail())
+                    .profileImg(block.getTargetMember().getProfileImg())
                     .build();
         }
     }
@@ -31,17 +39,19 @@ public class BlockResponseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class BlockListDTO {
-        Long blockId;
-        String name;    // 차단 대상 멤버 이름
-        String email;   // 차단 대상 멤버 이메일
-        String profileImg;  // 차단 대상 멤버 프로필 이미지
+        private List<BlockDTO> blocks;
+        private Long nextCursor;
+        private boolean hasNext;
 
-        public static BlockListDTO from(Block block) {
+        public static BlockListDTO of(List<Block> blocks, Long nextCursor, boolean hasNext) {
+            List<BlockDTO> blockDTOS = blocks.stream()
+                    .map(BlockDTO::from)
+                    .toList();
+
             return BlockListDTO.builder()
-                    .blockId(block.getId())
-                    .name(block.getTargetMember().getName())
-                    .email(block.getTargetMember().getEmail())
-                    .profileImg(block.getTargetMember().getProfileImg())
+                    .blocks(blockDTOS)
+                    .nextCursor(nextCursor)
+                    .hasNext(hasNext)
                     .build();
         }
     }

@@ -29,8 +29,10 @@ public class BlockController {
 
     @GetMapping("/blocks/members")
     @Operation(summary = "차단 목록 조회 API", description = "멤버가 차단한 목록을 조회합니다. 차단 목록이 없으면 빈 배열을 반환합니다.")
-    public ApiResponse<List<BlockResponseDTO.BlockListDTO>> getBlockList(@AuthenticatedMember Member member) {
-        List<BlockResponseDTO.BlockListDTO> blockListDTO = blockQueryService.getBlockList(member);
+    public ApiResponse<BlockResponseDTO.BlockListDTO> getBlockList(@RequestParam(defaultValue = "0") Long cursor,
+                                                                         @RequestParam(defaultValue = "10") Integer limit,
+                                                                         @AuthenticatedMember Member member) {
+        BlockResponseDTO.BlockListDTO blockListDTO = blockQueryService.getBlockList(cursor, limit, member);
         return ApiResponse.onSuccess(blockListDTO);
     }
 

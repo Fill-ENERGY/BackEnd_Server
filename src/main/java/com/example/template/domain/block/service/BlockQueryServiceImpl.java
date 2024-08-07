@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,11 +18,19 @@ public class BlockQueryServiceImpl implements BlockQueryService{
     private final BlockRepository blockRepository;
 
     @Override
-    public List<BlockResponseDTO.BlockListDTO> getBlockList(Member member) {
-        List<Block> blockList = blockRepository.findByMember(member);
-        return blockList.stream()
-                .map(BlockResponseDTO.BlockListDTO::from)
-                .collect(Collectors.toList());
+    public BlockResponseDTO.BlockListDTO getBlockList(Long cursor, Integer limit, Member member) {
+        // 첫 페이지 로딩 시 매우 큰 ID 값 사용
+        if (cursor == 0) {
+            cursor = Long.MAX_VALUE;
+        }
+
+        List<Block> blocks = blockRepository.findByMemberWithCursor(cursor, limit, member);
+
+        Long nextCursor = blocks.isEmpty() ? null : blocks.get(blocks.size() - 1).getId();
+        boolean hasNext = blocks.size() == limit;
+
+
+        return BlockResponseDTO.BlockListDTO.of(blocks, nextCursor, hasNext);
 
     }
 }
