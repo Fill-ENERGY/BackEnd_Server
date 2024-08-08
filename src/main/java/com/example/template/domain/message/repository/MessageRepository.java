@@ -38,4 +38,8 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
                                                                       @Param("member") Member member, @Param("leftAt") LocalDateTime leftAt);
 
     List<Message> findMessagesByMessageThreadAndReceiverAndReadStatus(MessageThread messageThread, Member member, ReadStatus readStatus);
+
+    List<Message> findByDeletedBySenTrueAndDeletedByRecTrue();
+
+    List<Message> findByMessageThreadId(Long id);
 }

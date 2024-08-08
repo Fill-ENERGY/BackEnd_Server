@@ -13,4 +13,6 @@ public interface MessageParticipantRepository extends JpaRepository<MessageParti
     Optional<MessageParticipant> findByMemberAndMessageThread(Member member, MessageThread messageThread);
 
     List<MessageParticipant> findByMemberAndParticipationStatus(Member member, ParticipationStatus participationStatus);
+
+    void deleteByMessageThreadId(Long id);
 }

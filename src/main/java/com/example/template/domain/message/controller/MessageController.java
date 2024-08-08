@@ -3,6 +3,7 @@ package com.example.template.domain.message.controller;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.message.dto.request.MessageRequestDTO;
 import com.example.template.domain.message.dto.response.MessageResponseDTO;
+import com.example.template.domain.message.scheduler.MessageHardDeleteScheduler;
 import com.example.template.domain.message.service.MessageCommandService;
 import com.example.template.domain.message.service.MessageQueryService;
 import com.example.template.global.annotation.AuthenticatedMember;
@@ -23,6 +24,7 @@ public class MessageController {
 
     private final MessageCommandService messageCommandService;
     private final MessageQueryService messageQueryService;
+    private final MessageHardDeleteScheduler messageHardDeleteScheduler;
 
     @PostMapping(value = "/messages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "쪽지 생성 API")
@@ -81,5 +83,20 @@ public class MessageController {
     public ApiResponse<MessageResponseDTO.ThreadDeleteDTO> softDeleteThread(@PathVariable("threadId") Long threadId, @AuthenticatedMember Member member) {
         MessageResponseDTO.ThreadDeleteDTO threadDeleteDTO= messageCommandService.softDeleteThread(threadId, member);
         return ApiResponse.onSuccess(threadDeleteDTO);
+    }
+
+    // TODO: 스케줄러 테스트용 api
+    @PostMapping("/messages/hard-delete-thread")
+    @Operation(summary = "채팅방 삭제(hard delete) 스케쥴러 테스트용 API", description = "(연동x) 채팅방을 물리적으로 삭제합니다. 참여자가 없는 채팅방을 삭제합니다.")
+    public ApiResponse<String> triggerHardDeleteThread() {
+        messageHardDeleteScheduler.hardDeleteThread();
+        return ApiResponse.onSuccess("채팅방 삭제 스케줄러 호출");
+    }
+
+    @PostMapping("/messages/hard-delete-message")
+    @Operation(summary = "쪽지 삭제(hard delete) 스케쥴러 테스트용 API", description = "(연동x) 쪽지를 물리적으로 삭제합니다. 보낸 사람과 받는 사람이 모두 삭제한 쪽지를 삭제합니다.")
+    public ApiResponse<String> triggerHardDeleteMessage() {
+        messageHardDeleteScheduler.hardDeleteMessage();
+        return ApiResponse.onSuccess("쪽지 삭제 스케줄러 호출");
     }
 }
