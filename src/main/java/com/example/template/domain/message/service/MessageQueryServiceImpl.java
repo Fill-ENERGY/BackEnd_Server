@@ -34,7 +34,7 @@ public class MessageQueryServiceImpl implements MessageQueryService {
     private final MessageThreadRepository messageThreadRepository;
 
     @Override
-    public MessageResponseDTO.MessageDTO getMessage(Long messageId) {
+    public MessageResponseDTO.MessageDTO getMessage(Long messageId, Member member) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.MESSAGE_NOT_FOUND));
 
@@ -42,11 +42,7 @@ public class MessageQueryServiceImpl implements MessageQueryService {
     }
 
     @Override
-    public List<MessageResponseDTO.ThreadListDTO> getThreadList() {
-        // TODO 현재 로그인한 멤버 정보 받아오기
-        Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
-
+    public List<MessageResponseDTO.ThreadListDTO> getThreadList(Member member) {
         // 참여 중인 채팅방 목록 조회
         List<MessageParticipant> participantList = messageParticipantRepository.findByMemberAndParticipationStatus(member, ParticipationStatus.ACTIVE);
 
@@ -75,9 +71,7 @@ public class MessageQueryServiceImpl implements MessageQueryService {
     }
 
     @Override
-    public MessageResponseDTO.ThreadDTO getThread(Long writerId) {
-        Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+    public MessageResponseDTO.ThreadDTO getThread(Long writerId, Member member) {
         Member writer = memberRepository.findById(writerId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.OTHER_PARTICIPANT_NOT_FOUND));
 
@@ -98,10 +92,7 @@ public class MessageQueryServiceImpl implements MessageQueryService {
     }
 
     @Override
-    public MessageResponseDTO.MessageListDTO getMessageList(Long threadId) {
-        // TODO 현재 로그인한 멤버 정보 받아오기
-        Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+    public MessageResponseDTO.MessageListDTO getMessageList(Long threadId, Member member) {
         MessageThread messageThread = messageThreadRepository.findById(threadId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
 

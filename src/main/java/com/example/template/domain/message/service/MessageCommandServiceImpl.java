@@ -41,10 +41,7 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     private final S3Manager s3Manager;
 
     @Override
-    public MessageResponseDTO.MessageDTO createMessage(List<MultipartFile> files, MessageRequestDTO.CreateMessageDTO requestDTO) {
-        // TODO 현재 로그인한 멤버 정보 받아오기, 멤버 관련 예외 처리로 변경하기
-        Member sender = memberRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+    public MessageResponseDTO.MessageDTO createMessage(List<MultipartFile> files, MessageRequestDTO.CreateMessageDTO requestDTO, Member sender) {
         Member receiver = memberRepository.findById(requestDTO.getReceiverId())
                 .orElseThrow(() -> new EntityNotFoundException("Receiver not found"));
 
@@ -137,10 +134,7 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     }
 
     @Override
-    public MessageResponseDTO.MessageDeleteDTO softDeleteMessage(Long messageId) {
-        // TODO 현재 로그인한 멤버 정보 받아오기
-        Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+    public MessageResponseDTO.MessageDeleteDTO softDeleteMessage(Long messageId, Member member) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.MESSAGE_NOT_FOUND));
 
@@ -158,10 +152,7 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     }
 
     @Override
-    public MessageResponseDTO.ThreadDeleteDTO softDeleteThread(Long threadId) {
-        // TODO 현재 로그인한 멤버 정보 받아오기
-        Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+    public MessageResponseDTO.ThreadDeleteDTO softDeleteThread(Long threadId, Member member) {
         MessageThread messageThread = messageThreadRepository.findById(threadId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
         MessageParticipant participant = messageParticipantRepository.findByMemberAndMessageThread(member, messageThread)
@@ -184,10 +175,7 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     }
 
     @Override
-    public MessageResponseDTO.MessageListDTO updateMessageList(Long threadId) {
-        // TODO 현재 로그인한 멤버 정보 받아오기
-        Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+    public MessageResponseDTO.MessageListDTO updateMessageList(Long threadId, Member member) {
         MessageThread messageThread = messageThreadRepository.findById(threadId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
 
