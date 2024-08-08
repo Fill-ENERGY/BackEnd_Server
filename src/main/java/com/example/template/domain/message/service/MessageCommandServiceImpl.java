@@ -1,5 +1,6 @@
 package com.example.template.domain.message.service;
 
+import com.example.template.domain.block.repository.BlockRepository;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.domain.message.dto.request.MessageRequestDTO;
@@ -37,6 +38,7 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     private final MessageThreadRepository messageThreadRepository;
     private final MessageParticipantRepository messageParticipantRepository;
     private final MessageImgRepository messageImgRepository;
+    private final BlockRepository blockRepository;
     private final UuidRepository uuidRepository;
     private final S3Manager s3Manager;
 
@@ -48,6 +50,12 @@ public class MessageCommandServiceImpl implements MessageCommandService {
         // 자기 자신에게 쪽지를 보내는 경우
         if(sender.equals(receiver)) {
             throw new MessageException(MessageErrorCode.SELF_MESSAGE_NOT_ALLOWED);
+        }
+
+        // 차단된 멤버에게 쪽지를 보내는 경우
+        boolean isBlockedMember = blockRepository.existsByMemberAndTargetMember(sender, receiver);
+        if (isBlockedMember) {
+            throw new MessageException(MessageErrorCode.BLOCKED_MEMBER_NOT_ALLOWED);
         }
 
         // 채팅방 조회 또는 생성
