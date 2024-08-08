@@ -43,7 +43,12 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     @Override
     public MessageResponseDTO.MessageDTO createMessage(List<MultipartFile> files, MessageRequestDTO.CreateMessageDTO requestDTO, Member sender) {
         Member receiver = memberRepository.findById(requestDTO.getReceiverId())
-                .orElseThrow(() -> new EntityNotFoundException("Receiver not found"));
+                .orElseThrow(() -> new MessageException(MessageErrorCode.OTHER_PARTICIPANT_NOT_FOUND));
+
+        // 자기 자신에게 쪽지를 보내는 경우
+        if(sender.equals(receiver)) {
+            throw new MessageException(MessageErrorCode.SELF_MESSAGE_NOT_ALLOWED);
+        }
 
         // 채팅방 조회 또는 생성
         MessageThread messageThread = getOrCreateMessageThread(requestDTO.getThreadId(), sender, receiver);
