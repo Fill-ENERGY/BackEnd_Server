@@ -1,8 +1,7 @@
 package com.example.template.domain.message.service;
 
+import com.example.template.domain.block.repository.BlockRepository;
 import com.example.template.domain.member.entity.Member;
-import com.example.template.domain.member.exception.MemberErrorCode;
-import com.example.template.domain.member.exception.MemberException;
 import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.domain.message.dto.response.MessageResponseDTO;
 import com.example.template.domain.message.entity.*;
@@ -20,8 +19,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +31,7 @@ public class MessageQueryServiceImpl implements MessageQueryService {
     private final MemberRepository memberRepository;
     private final MessageParticipantRepository messageParticipantRepository;
     private final MessageThreadRepository messageThreadRepository;
+    private final BlockRepository blockRepository;
 
     @Override
     public MessageResponseDTO.MessageDTO getMessage(Long messageId, Member member) {
@@ -46,28 +46,37 @@ public class MessageQueryServiceImpl implements MessageQueryService {
         // 참여 중인 채팅방 목록 조회
         List<MessageParticipant> participantList = messageParticipantRepository.findByMemberAndParticipationStatus(member, ParticipationStatus.ACTIVE);
 
-        return participantList.stream()
-                .map(participant -> {
-                    MessageThread thread = participant.getMessageThread();
+        // 차단한 멤버 목록 조회
+        List<Member> blockedMembers = blockRepository.findTargetMembersByMember(member);
 
-                    // 최신 쪽지 조회(커스컴 쿼리 -> 멤버가 전송자 또는 수신자이면서 삭제하지 않은 쪽지)
-                    Pageable pageable = PageRequest.of(0, 1);
-                    List<Message> latestMessages = messageRepository.findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(thread, member, pageable);
+        List<MessageResponseDTO.ThreadListDTO> threadListDTOs = new ArrayList<>();
 
-                    MessageResponseDTO.RecentMessage recentMessage = latestMessages.stream()
-                            .findFirst()
-                            .map(MessageResponseDTO.RecentMessage::from)
-                            .orElse(null);
+        for (MessageParticipant participant : participantList) {
+            MessageThread thread = participant.getMessageThread();
 
-                    // 받은 쪽지 중 읽지 않고 삭제하지 않은 쪽지 개수
-                    long unreadMessageCount = messageRepository.countByMessageThreadAndReceiverAndReadStatusAndDeletedByRecFalse(thread, member, ReadStatus.NOT_READ);
+            // 쪽지 상대 찾기
+            Member otherParticipant = getOtherParticipant(thread, member);
 
-                    // 쪽지 상대 찾기
-                    Member otherParticipant = getOtherParticipant(thread, member);
+            // 차단된 멤버가 있는 채팅방은 목록에서 제외
+            if (blockedMembers.contains(otherParticipant)) {
+                continue;
+            }
 
-                    return MessageResponseDTO.ThreadListDTO.of(participant, recentMessage, (int) unreadMessageCount, otherParticipant);
-                })
-                .collect(Collectors.toList());
+            // 최신 쪽지 조회(커스컴 쿼리 -> 멤버가 전송자 또는 수신자이면서 삭제하지 않은 쪽지)
+            Pageable pageable = PageRequest.of(0, 1);
+            List<Message> latestMessages = messageRepository.findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(thread, member, pageable);
+
+            MessageResponseDTO.RecentMessage recentMessage = latestMessages.stream()
+                    .findFirst()
+                    .map(MessageResponseDTO.RecentMessage::from)
+                    .orElse(null);
+
+            // 받은 쪽지 중 읽지 않고 삭제하지 않은 쪽지 개수
+            long unreadMessageCount = messageRepository.countByMessageThreadAndReceiverAndReadStatusAndDeletedByRecFalse(thread, member, ReadStatus.NOT_READ);
+
+            threadListDTOs.add(MessageResponseDTO.ThreadListDTO.of(participant, recentMessage, (int) unreadMessageCount, otherParticipant));
+        }
+        return threadListDTOs;
     }
 
     @Override
