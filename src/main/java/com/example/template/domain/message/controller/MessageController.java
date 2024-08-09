@@ -1,5 +1,6 @@
 package com.example.template.domain.message.controller;
 
+import com.example.template.domain.board.scheduler.UnmappedImageCleanupScheduler;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.message.dto.request.MessageRequestDTO;
 import com.example.template.domain.message.dto.response.MessageResponseDTO;
@@ -29,13 +30,21 @@ public class MessageController {
     private final MessageCommandService messageCommandService;
     private final MessageQueryService messageQueryService;
     private final MessageHardDeleteScheduler messageHardDeleteScheduler;
+    private final UnmappedImageCleanupScheduler unmappedImageCleanupScheduler;
 
-    @PostMapping(value = "/messages", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "쪽지 생성 API")
-    public ApiResponse<MessageResponseDTO.MessageDTO> createMessage(@RequestPart(value = "file", required = false) List<MultipartFile> files,
-                                                                    @Valid @RequestPart("requestDTO") MessageRequestDTO.CreateMessageDTO requestDTO,
+
+    @Operation(summary = "쪽지 이미지 업로드 API", description = "쪽지로 전송할 이미지를 저장합니다.")
+    @PostMapping(value = "messages/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<MessageResponseDTO.MessageImgDTO> uploadImages(@RequestPart("images") List<MultipartFile> images,
+                                                                      @AuthenticatedMember Member member) {
+        return ApiResponse.onSuccess(messageCommandService.createImageMessage(images, member));
+    }
+
+    @PostMapping(value = "/messages")
+    @Operation(summary = "쪽지 전송 API", description = "쪽지를 전송합니다. ")
+    public ApiResponse<MessageResponseDTO.MessageDTO> createMessage(@Valid @RequestBody MessageRequestDTO.CreateMessageDTO requestDTO,
                                                                     @AuthenticatedMember Member member) {
-        MessageResponseDTO.MessageDTO messageDTO = messageCommandService.createMessage(files, requestDTO, member);
+        MessageResponseDTO.MessageDTO messageDTO = messageCommandService.createMessage(requestDTO, member);
         return ApiResponse.onSuccess(messageDTO);
     }
 
@@ -46,7 +55,6 @@ public class MessageController {
         return ApiResponse.onSuccess(messageDTO);
     }
 
-    // TODO: 페이지네이션
     @GetMapping("/threads/{threadId}/messages")
     @Operation(summary = "쪽지 목록 조회 API", description = "채팅방의 쪽지 목록을 조회합니다.")
     @Parameters({
@@ -61,7 +69,6 @@ public class MessageController {
         return ApiResponse.onSuccess(messageListDTO);
     }
 
-    // TODO: 페이지네이션
     @PatchMapping("/threads/{threadId}/messages")
     @Operation(summary = "쪽지 목록 조회 및 읽음 상태 업데이트 API", description = "채팅방의 쪽지 목록을 조회하고 읽지 않은 쪽지를 읽음으로 업데이트합니다.")
     @Parameters({
@@ -124,13 +131,21 @@ public class MessageController {
     @Operation(summary = "채팅방 삭제(hard delete) 스케쥴러 테스트용 API", description = "(연동x) 채팅방을 물리적으로 삭제합니다. 참여자가 없는 채팅방을 삭제합니다.")
     public ApiResponse<String> triggerHardDeleteThread() {
         messageHardDeleteScheduler.hardDeleteThread();
-        return ApiResponse.onSuccess("채팅방 삭제 스케줄러 호출");
+        return ApiResponse.onSuccess("채팅방 삭제 스케쥴러 호출");
     }
 
     @PostMapping("/messages/hard-delete-message")
     @Operation(summary = "쪽지 삭제(hard delete) 스케쥴러 테스트용 API", description = "(연동x) 쪽지를 물리적으로 삭제합니다. 보낸 사람과 받는 사람이 모두 삭제한 쪽지를 삭제합니다.")
     public ApiResponse<String> triggerHardDeleteMessage() {
         messageHardDeleteScheduler.hardDeleteMessage();
-        return ApiResponse.onSuccess("쪽지 삭제 스케줄러 호출");
+        return ApiResponse.onSuccess("쪽지 삭제 스케쥴러 호출");
+    }
+
+    // TODO :쪽지 이미지 삭제 스케줄러 테스트용 api
+    @Operation(summary = "쪽지 이미지 삭제 스케쥴러 테스트용 API", description = "(연동x) message와 매핑이 안된 messageimg를 삭제합니다.")
+    @PostMapping("/messages/cleanup-unmapped-images")
+    public ApiResponse<String> cleanupUnmappedImages() {
+        unmappedImageCleanupScheduler.cleanupUnmappedMessageImages();
+        return ApiResponse.onSuccess("쪽지 이미지 삭제 스케쥴러 호출");
     }
 }

@@ -8,7 +8,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface MessageCommandService {
-    MessageResponseDTO.MessageDTO createMessage(List<MultipartFile> files, MessageRequestDTO.CreateMessageDTO requestDTO, Member member);
+    MessageResponseDTO.MessageImgDTO createImageMessage(List<MultipartFile> images, Member member);
+
+    MessageResponseDTO.MessageDTO createMessage(MessageRequestDTO.CreateMessageDTO requestDTO, Member member);
 
     MessageResponseDTO.MessageDeleteDTO softDeleteMessage(Long messageId, Member member);
 

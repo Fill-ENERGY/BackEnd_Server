@@ -17,7 +17,6 @@ import com.example.template.domain.message.repository.MessageThreadRepository;
 import com.example.template.global.config.aws.S3Manager;
 import com.example.template.global.util.s3.entity.Uuid;
 import com.example.template.global.util.s3.repository.UuidRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +43,40 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     private final S3Manager s3Manager;
 
     @Override
-    public MessageResponseDTO.MessageDTO createMessage(List<MultipartFile> files, MessageRequestDTO.CreateMessageDTO requestDTO, Member sender) {
+    public MessageResponseDTO.MessageImgDTO createImageMessage(List<MultipartFile> images, Member member) {
+        List<String> keyNames = new ArrayList<>();
+        List<Uuid> uuids = new ArrayList<>();
+
+        // UUID 생성 및 키 이름 생성
+        for (MultipartFile image : images) {
+            if (image != null && !image.isEmpty()) {
+                String uuid = UUID.randomUUID().toString();
+                Uuid savedUuid = Uuid.builder().uuid(uuid).build();
+                uuids.add(savedUuid);
+                keyNames.add(s3Manager.generateMessageKeyName(savedUuid));
+            }
+        }
+
+        // UUID 일괄 저장
+        uuidRepository.saveAll(uuids);
+
+        // S3에 파일 일괄 업로드
+        List<String> imageUrls = s3Manager.uploadFiles(keyNames, images);
+
+        // MessageImg 엔티티 생성 및 저장 (Message와 연결하지 않음)
+        List<MessageImg> messageImg = imageUrls.stream()
+                .map(url -> MessageImg.builder().imgUrl(url).build())
+                .toList();
+        messageImgRepository.saveAll(messageImg);
+
+        // MessageImgDTO 생성 및 반환
+        return MessageResponseDTO.MessageImgDTO.builder()
+                .images(imageUrls)
+                .build();
+    }
+
+    @Override
+    public MessageResponseDTO.MessageDTO createMessage(MessageRequestDTO.CreateMessageDTO requestDTO, Member sender) {
         Member receiver = memberRepository.findById(requestDTO.getReceiverId())
                 .orElseThrow(() -> new MessageException(MessageErrorCode.OTHER_PARTICIPANT_NOT_FOUND));
 
@@ -61,13 +93,24 @@ public class MessageCommandServiceImpl implements MessageCommandService {
 
         // 채팅방 조회 또는 생성
         MessageThread messageThread = getOrCreateMessageThread(requestDTO.getThreadId(), sender, receiver);
-        
+
         // 쪽지 생성
         Message message = requestDTO.toEntity(sender, receiver,messageThread);
-        Message savedMessage = messageRepository.save(message);
 
-        // S3에 이미지 업로드
-        uploadMessageImages(files, savedMessage);
+        // 이미지 처리
+        if (requestDTO.getImages() != null && !requestDTO.getImages().isEmpty()) {
+            List<MessageImg> messageImgs = messageImgRepository.findAllByImgUrlIn(requestDTO.getImages());
+
+            // S3에 등록되지 않은 이미지를 가지고 접근
+            if (messageImgs.size() != requestDTO.getImages().size()) {
+                throw new MessageException(MessageErrorCode.INVALID_IMAGE_URLS);
+            }
+
+            messageImgs.forEach(img -> img.setMessage(message));
+            messageImgRepository.saveAll(messageImgs);
+        }
+
+        Message savedMessage = messageRepository.save(message);
 
         return MessageResponseDTO.MessageDTO.from(savedMessage);
     }
@@ -115,39 +158,6 @@ public class MessageCommandServiceImpl implements MessageCommandService {
                 .participationStatus(ParticipationStatus.ACTIVE)
                 .build();
         messageParticipantRepository.save(messageParticipant);
-    }
-
-    private void uploadMessageImages(List<MultipartFile> files, Message message) {
-        if (files != null && !files.isEmpty()) {
-            // UUID 생성 및 저장
-            List<Uuid> savedUuids = new ArrayList<>();
-            for (MultipartFile file : files) {
-                if (file != null && !file.isEmpty()) {
-                    String uuid = UUID.randomUUID().toString();
-                    Uuid savedUuid = uuidRepository.save(Uuid.builder().uuid(uuid).build());
-                    savedUuids.add(savedUuid);
-                }
-            }
-
-            // S3 키 이름 생성
-            List<String> keyNames = savedUuids.stream()
-                    .map(s3Manager::generateMessageKeyName)
-                    .collect(Collectors.toList());
-
-            // 파일 업로드 및 URL 반환
-            List<String> imgUrls = s3Manager.uploadFiles(keyNames, files);
-
-            for (String imgUrl : imgUrls) {
-                MessageImg messageImg = MessageImg.builder()
-                        .imgUrl(imgUrl)
-                        .message(message)
-                        .build();
-                messageImgRepository.save(messageImg);
-                message.getImages().add(messageImg);
-            }
-
-            messageRepository.save(message);
-        }
     }
 
     @Override

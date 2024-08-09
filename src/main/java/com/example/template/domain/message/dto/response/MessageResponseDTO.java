@@ -16,6 +16,12 @@ import java.util.stream.Collectors;
 
 public class MessageResponseDTO {
 
+    @Getter
+    @Builder
+    public static class MessageImgDTO {
+        private List<String> images;
+    }
+
     @Builder
     @Getter
     @NoArgsConstructor

@@ -18,6 +18,7 @@ public enum MessageErrorCode implements BaseErrorCode {
     PERMISSION_DENIED(HttpStatus.FORBIDDEN, "MESSAGE403_1", "보낸 사람 또는 받는 사람이 아닙니다. 권한이 없습니다."),
     SELF_MESSAGE_NOT_ALLOWED(HttpStatus.FORBIDDEN, "MESSAGE403_2", "자기 자신과의 쪽지는 허용되지 않습니다."),
     BLOCKED_MEMBER_NOT_ALLOWED(HttpStatus.FORBIDDEN, "MESSAGE403_3", "차단한 멤버에게는 쪽지를 보낼 수 없습니다."),
+    INVALID_IMAGE_URLS(HttpStatus.BAD_REQUEST, "MESSAGE400", "일부 이미지 URL이 유효하지 않거나 찾을 수 없습니다."),
 
     // MessageParticipant ERROR 응답
     PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTICIPANT404_1", "채팅방에서 해당 참여자를 찾을 수 없습니다."),
