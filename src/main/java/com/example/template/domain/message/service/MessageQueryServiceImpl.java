@@ -12,13 +12,13 @@ import com.example.template.domain.message.exception.MessageException;
 import com.example.template.domain.message.repository.MessageParticipantRepository;
 import com.example.template.domain.message.repository.MessageRepository;
 import com.example.template.domain.message.repository.MessageThreadRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,25 +42,22 @@ public class MessageQueryServiceImpl implements MessageQueryService {
     }
 
     @Override
-    public List<MessageResponseDTO.ThreadListDTO> getThreadList(Member member) {
-        // 참여 중인 채팅방 목록 조회
-        List<MessageParticipant> participantList = messageParticipantRepository.findByMemberAndParticipationStatus(member, ParticipationStatus.ACTIVE);
-
+    public MessageResponseDTO.ThreadListDTO getThreadList(LocalDateTime cursor, Long lastId, Integer limit, Member member) {
         // 차단한 멤버 목록 조회
         List<Member> blockedMembers = blockRepository.findTargetMembersByMember(member);
 
-        List<MessageResponseDTO.ThreadListDTO> threadListDTOs = new ArrayList<>();
+        // 차단한 멤버를 제외한 참여 중인 채팅방 목록 조회 (커서 기반 쿼리 사용)
+        List<MessageParticipant> participantList = messageParticipantRepository.findByMemberAndParticipationStatusWithCursor(
+                member, ParticipationStatus.ACTIVE, blockedMembers, cursor, lastId, PageRequest.of(0, limit)
+        );
+
+        List<MessageResponseDTO.ThreadDetailListDTO> threadDetailListDTOS = new ArrayList<>();
 
         for (MessageParticipant participant : participantList) {
             MessageThread thread = participant.getMessageThread();
 
             // 쪽지 상대 찾기
             Member otherParticipant = getOtherParticipant(thread, member);
-
-            // 차단된 멤버가 있는 채팅방은 목록에서 제외
-            if (blockedMembers.contains(otherParticipant)) {
-                continue;
-            }
 
             // 최신 쪽지 조회(커스컴 쿼리 -> 멤버가 전송자 또는 수신자이면서 삭제하지 않은 쪽지)
             Pageable pageable = PageRequest.of(0, 1);
@@ -74,9 +71,15 @@ public class MessageQueryServiceImpl implements MessageQueryService {
             // 받은 쪽지 중 읽지 않고 삭제하지 않은 쪽지 개수
             long unreadMessageCount = messageRepository.countByMessageThreadAndReceiverAndReadStatusAndDeletedByRecFalse(thread, member, ReadStatus.NOT_READ);
 
-            threadListDTOs.add(MessageResponseDTO.ThreadListDTO.of(participant, recentMessage, (int) unreadMessageCount, otherParticipant));
+            threadDetailListDTOS.add(MessageResponseDTO.ThreadDetailListDTO.of(participant, recentMessage, (int) unreadMessageCount, otherParticipant));
         }
-        return threadListDTOs;
+
+        // 다음 페이지 커서 설정
+        LocalDateTime nextCursor = threadDetailListDTOS.isEmpty() ? null : threadDetailListDTOS.get(threadDetailListDTOS.size() - 1).getUpdatedAt();
+        Long nextId = threadDetailListDTOS.isEmpty() ? null : threadDetailListDTOS.get(threadDetailListDTOS.size() - 1).getThreadId();
+        boolean hasNext = threadDetailListDTOS.size() == limit;
+
+        return MessageResponseDTO.ThreadListDTO.of(threadDetailListDTOS, nextCursor, nextId, hasNext);
     }
 
     @Override
@@ -134,4 +137,5 @@ public class MessageQueryServiceImpl implements MessageQueryService {
         }
         return otherParticipant;
     }
+
 }
