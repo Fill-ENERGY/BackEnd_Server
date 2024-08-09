@@ -1,7 +1,5 @@
 package com.example.template.domain.review.service.impl;
 
-import com.example.template.domain.board.exception.BoardErrorCode;
-import com.example.template.domain.board.exception.BoardException;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.domain.review.entity.Review;
@@ -55,8 +53,8 @@ public class ReviewQueryServiceImpl implements ReviewQueryService {
     }
 
     @Override
-    public List<Review> getReviewsOfUsers() {
-        return reviewRepository.findAllByMemberIsOrderByCreatedAtDesc(getMockMember());
+    public List<Review> getReviewsOfUsers(Member member) {
+        return reviewRepository.findAllByMemberIsOrderByCreatedAtDesc(member);
     }
 
     @Override
@@ -64,9 +62,8 @@ public class ReviewQueryServiceImpl implements ReviewQueryService {
         return reviewRepository.findById(reviewId).orElseThrow(() -> new ReviewException(ReviewErrorCode.NOT_FOUND));
     }
 
-    // TODO : 멤버의 임시 목데이터
-    private Member getMockMember() {
-        return memberRepository.findById(1L)
-                .orElseThrow(() -> new BoardException(BoardErrorCode.MEMBER_NOT_FOUND));
+    @Override
+    public boolean isExist(Long reviewId) {
+        return reviewRepository.existsById(reviewId);
     }
 }

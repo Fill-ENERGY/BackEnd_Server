@@ -1,8 +1,5 @@
 package com.example.template.domain.review.service.impl;
 
-import com.example.template.domain.board.exception.BoardErrorCode;
-import com.example.template.domain.board.exception.BoardException;
-//import com.example.template.domain.board.repository.MemberRepository;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.domain.review.dto.request.ReviewRequestDTO;
@@ -41,11 +38,11 @@ public class ReviewCommandServiceImpl implements ReviewCommandService {
     private final StationRepository stationRepository;
 
     @Override
-    public Review createReview(ReviewRequestDTO.CreateReviewRequestDTO request) {
+    public Review createReview(Member member, ReviewRequestDTO.CreateReviewRequestDTO request) {
 
         Station station = stationRepository.findById(request.getStationId()).orElseThrow(() ->
                 new StationException(StationErrorCode.NOT_FOUND));
-        Review review = reviewRepository.save(request.toReview(getMockMember(), station));
+        Review review = reviewRepository.save(request.toReview(member, station));
         // TODO: 사진 로직 필요
         request.getKeywords().forEach(keyword -> reviewKeywordRepository.save(
                 ReviewKeyword.builder()
@@ -104,8 +101,7 @@ public class ReviewCommandServiceImpl implements ReviewCommandService {
     }
 
     @Override
-    public boolean recommendReview(Long reviewId) {
-        Member member = getMockMember();
+    public boolean recommendReview(Member member, Long reviewId) {
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new ReviewException(ReviewErrorCode.NOT_FOUND));
         reviewRecommendRepository.findByMemberIsAndReviewIs(member, review).ifPresentOrElse(
                 reviewRecommendRepository::delete,
@@ -124,11 +120,5 @@ public class ReviewCommandServiceImpl implements ReviewCommandService {
     public boolean isRecommended(Long reviewId, Member member) {
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new ReviewException(ReviewErrorCode.NOT_FOUND));
         return reviewRecommendRepository.existsByReviewIsAndMemberIs(review, member);
-    }
-
-    // TODO : 멤버의 임시 목데이터
-    private Member getMockMember() {
-        return memberRepository.findById(1L)
-                .orElseThrow(() -> new BoardException(BoardErrorCode.MEMBER_NOT_FOUND));
     }
 }

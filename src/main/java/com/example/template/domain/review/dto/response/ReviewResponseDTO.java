@@ -4,7 +4,6 @@ import com.example.template.domain.member.dto.ProfileResponseDTO;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.review.entity.Keyword;
 import com.example.template.domain.review.entity.Review;
-import com.example.template.domain.review.entity.ReviewKeyword;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -35,6 +34,7 @@ public class ReviewResponseDTO {
         private Integer recommendationNum;
         private List<KeywordDTO> keywords;
         private double score;
+        // TODO: 공용 유저 응답으로 변경 예정
         private ProfileResponseDTO.ProfileDTO member;
         private boolean isRecommended;
         private String username;
