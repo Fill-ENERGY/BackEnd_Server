@@ -30,15 +30,6 @@ public class BoardController {
 
     private final BoardQueryService boardQueryService;
     private final BoardCommandService boardCommandService;
-    private final UnmappedImageCleanupScheduler unmappedImageCleanupScheduler;
-
-    // TODO : 테스트용 수동 트리거 컨트롤러 - 삭제 예정
-    @Operation(summary = "테스트용 수동 트리거", description = "board와 매핑이 안된 baordimg를 삭제합니다.")
-    @PostMapping("/cleanupUnmappedImages")
-    public ApiResponse<String> cleanupUnmappedImages() {
-        unmappedImageCleanupScheduler.manualCleanup();
-        return ApiResponse.onSuccess("삭제 완료");
-    }
 
     @Operation(summary = "이미지 업로드", description = "게시글에 첨부할 이미지를 업로드합니다.")
     @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

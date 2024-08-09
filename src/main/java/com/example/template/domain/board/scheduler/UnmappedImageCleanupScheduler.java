@@ -31,9 +31,4 @@ public class UnmappedImageCleanupScheduler {
 
         log.info("[cleanupUnmappedImages 실행] 삭제완료");
     }
-
-    // TODO: 테스트용 수동 트리거 메서드 - 삭제 예정
-    public void manualCleanup() {
-        this.cleanupUnmappedImages();
-    }
 }
