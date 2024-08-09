@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -79,6 +80,9 @@ public class MessageCommandServiceImpl implements MessageCommandService {
             // 쪽지 전송자 또는 수신자가 채팅방을 나간 경우, 참여 상태를 다시 ACTIVE로 업데이트
             updateParticipantStatusToActive(messageThread, sender);
             updateParticipantStatusToActive(messageThread, receiver);
+
+            // 채팅방의 updatedAt 갱신
+            messageThread.setUpdatedAt(LocalDateTime.now());
 
             return messageThread;
         } else {    // 채팅방이 존재하지 않는 경우(첫 쪽지)
