@@ -12,7 +12,6 @@ import com.example.template.domain.board.repository.BoardImgRepository;
 import com.example.template.domain.board.repository.BoardLikeRepository;
 import com.example.template.domain.board.repository.BoardRepository;
 import com.example.template.domain.member.entity.Member;
-import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.global.config.aws.S3Manager;
 import com.example.template.global.util.s3.entity.Uuid;
 import com.example.template.global.util.s3.repository.UuidRepository;
@@ -35,7 +34,6 @@ public class BoardCommandServiceImpl implements BoardCommandService {
     private final BoardRepository boardRepository;
     private final BoardLikeRepository boardLikeRepository;
     private final BoardImgRepository boardImgRepository;
-    private final MemberRepository memberRepository;
     private final UuidRepository uuidRepository;
     private final S3Manager s3Manager;
 
@@ -73,8 +71,7 @@ public class BoardCommandServiceImpl implements BoardCommandService {
     }
 
     @Override
-    public BoardResponseDTO.BoardDTO createBoard(BoardRequestDTO.CreateBoardDTO createBoardDTO) {
-        Member member = getMockMember();
+    public BoardResponseDTO.BoardDTO createBoard(BoardRequestDTO.CreateBoardDTO createBoardDTO, Member member) {
         Board board = createBoardDTO.toEntity(member);
 
         if (createBoardDTO.getImages() != null && !createBoardDTO.getImages().isEmpty()) {
@@ -94,8 +91,9 @@ public class BoardCommandServiceImpl implements BoardCommandService {
     }
 
     @Override
-    public BoardResponseDTO.BoardDTO updateBoard(Long boardId, BoardRequestDTO.UpdateBoardDTO updateBoardDTO) {
-        Member member = getMockMember();
+    public BoardResponseDTO.BoardDTO updateBoard(Long boardId,
+                                                 BoardRequestDTO.UpdateBoardDTO updateBoardDTO,
+                                                 Member member) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
         validateBoardOwnership(board, member);
@@ -149,8 +147,7 @@ public class BoardCommandServiceImpl implements BoardCommandService {
     }
 
     @Override
-    public Long deleteBoard(Long boardId) {
-        Member member = getMockMember();
+    public Long deleteBoard(Long boardId, Member member) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
         validateBoardOwnership(board, member);
@@ -172,8 +169,9 @@ public class BoardCommandServiceImpl implements BoardCommandService {
     }
 
     @Override
-    public BoardResponseDTO.BoardStatusDTO updateBoardStatus(Long boardId, BoardRequestDTO.UpdateBoardStatusDTO updateBoardStatusDTO) {
-        Member member = getMockMember();
+    public BoardResponseDTO.BoardStatusDTO updateBoardStatus(Long boardId,
+                                                             BoardRequestDTO.UpdateBoardStatusDTO updateBoardStatusDTO,
+                                                             Member member) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
         if (board.getCategory() != Category.HELP) {
@@ -184,11 +182,9 @@ public class BoardCommandServiceImpl implements BoardCommandService {
         return BoardResponseDTO.BoardStatusDTO.from(board);
     }
 
-    // TODO : 나중에 트리거 적용 시 고민해야 될 로직
-    // 트리거 + 영속성 컨텍스트 생각하면 뺄지 안뺄지 고민해봐야할 듯
+    // TODO : 트리거 적용 시 하지 않은 Ver
     @Override
-    public BoardResponseDTO.BoardLikeDTO addLike(Long boardId) {
-        Member member = getMockMember();
+    public BoardResponseDTO.BoardLikeDTO addLike(Long boardId, Member member) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
 
@@ -209,8 +205,7 @@ public class BoardCommandServiceImpl implements BoardCommandService {
     }
 
     @Override
-    public BoardResponseDTO.BoardLikeDTO removeLike(Long boardId) {
-        Member member = getMockMember();
+    public BoardResponseDTO.BoardLikeDTO removeLike(Long boardId, Member member) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
 
@@ -225,11 +220,6 @@ public class BoardCommandServiceImpl implements BoardCommandService {
         return BoardResponseDTO.BoardLikeDTO.from(board, member.getId());
     }
 
-    // TODO : 멤버의 임시 목데이터
-    private Member getMockMember() {
-        return memberRepository.findById(1L)
-                .orElseThrow(() -> new BoardException(BoardErrorCode.MEMBER_NOT_FOUND));
-    }
 
     /*
     is_author을 Boolean 값으로 넘겨주어 프론트엔드에서 UI 레벨의 제어를 하지만

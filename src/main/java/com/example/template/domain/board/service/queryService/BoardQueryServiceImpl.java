@@ -27,10 +27,11 @@ public class BoardQueryServiceImpl implements BoardQueryService {
     private final MemberRepository memberRepository;
 
     @Override
-    public BoardResponseDTO.BoardListDTO getBoardList(Category category, Long cursor, Integer limit, SortType sortType) {
-
-        Member member = getMockMember();
-
+    public BoardResponseDTO.BoardListDTO getBoardList(Category category,
+                                                      Long cursor,
+                                                      Integer limit,
+                                                      SortType sortType,
+                                                      Member member) {
         // 첫 페이지 로딩 시 매우 큰 ID 값 사용
         if (cursor == 0) {
             cursor = Long.MAX_VALUE;
@@ -57,17 +58,10 @@ public class BoardQueryServiceImpl implements BoardQueryService {
     }
 
     @Override
-    public BoardResponseDTO.BoardDetailDTO getBoardDetail(Long boardId) {
-        Member member = getMockMember();
+    public BoardResponseDTO.BoardDetailDTO getBoardDetail(Long boardId, Member member) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
         List<Comment> comments = commentRepository.findByBoardId(boardId);
         return BoardResponseDTO.BoardDetailDTO.of(board, comments, member.getId());
-    }
-
-    // TODO : 멤버의 임시 목데이터
-    private Member getMockMember() {
-        return memberRepository.findById(1L)
-                .orElseThrow(() -> new BoardException(BoardErrorCode.MEMBER_NOT_FOUND));
     }
 }
