@@ -104,7 +104,12 @@ public class MessageQueryServiceImpl implements MessageQueryService {
     }
 
     @Override
-    public MessageResponseDTO.MessageListDTO getMessageList(Long threadId, Member member) {
+    public MessageResponseDTO.MessageListDTO getMessageList(Long threadId, Long cursor, Integer limit, Member member) {
+        // 첫 페이지 로딩 시 매우 큰 ID 값 사용
+        if (cursor == 0) {
+            cursor = Long.MAX_VALUE;
+        }
+
         MessageThread messageThread = messageThreadRepository.findById(threadId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
 
@@ -116,10 +121,13 @@ public class MessageQueryServiceImpl implements MessageQueryService {
                 .orElseThrow(() -> new MessageException(MessageErrorCode.PARTICIPANT_NOT_FOUND));
 
         // leftAt 이후의 쪽지만 조회
-        List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberAndLeftAtAfter(
-                messageThread, member, messageParticipant.getLeftAt());
+        List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberAndLeftAtAfterWithCursor(
+                cursor, limit, messageThread, member, messageParticipant.getLeftAt());
 
-        return MessageResponseDTO.MessageListDTO.from(messageThread, otherParticipant, messages);
+        Long nextCursor = messages.isEmpty() ? null : messages.get(messages.size() - 1).getId();
+        boolean hasNext = messages.size() == limit;
+
+        return MessageResponseDTO.MessageListDTO.from(messageThread, otherParticipant, messages, nextCursor, hasNext);
     }
 
 

@@ -12,5 +12,5 @@ public interface MessageQueryService {
 
     MessageResponseDTO.ThreadDTO getThread(Long writerId, Member member);
 
-    MessageResponseDTO.MessageListDTO getMessageList(Long threadId, Member member);
+    MessageResponseDTO.MessageListDTO getMessageList(Long threadId, Long cursor, Integer limit, Member member);
 }

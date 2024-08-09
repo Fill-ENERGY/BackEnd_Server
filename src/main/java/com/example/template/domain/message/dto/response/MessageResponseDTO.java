@@ -158,8 +158,10 @@ public class MessageResponseDTO {
         private String email;
         private String profileImg;
         private List<MessageDTO> messages;
+        private Long nextCursor;
+        private boolean hasNext;
 
-        public static MessageListDTO from(MessageThread thread, Member otherParticipant, List<Message> messages) {
+        public static MessageListDTO from(MessageThread thread, Member otherParticipant, List<Message> messages, Long nextCursor, boolean hasNext) {
             List<MessageDTO> messageDTOs = messages.stream()
                     .map(MessageDTO::from)
                     .collect(Collectors.toList());
@@ -170,6 +172,8 @@ public class MessageResponseDTO {
                     .email(otherParticipant.getEmail())
                     .profileImg(otherParticipant.getProfileImg())
                     .messages(messageDTOs)
+                    .nextCursor(nextCursor)
+                    .hasNext(hasNext)
                     .build();
         }
     }

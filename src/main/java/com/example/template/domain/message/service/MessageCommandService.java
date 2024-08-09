@@ -14,5 +14,5 @@ public interface MessageCommandService {
 
     MessageResponseDTO.ThreadDeleteDTO softDeleteThread(Long threadId, Member member);
 
-    MessageResponseDTO.MessageListDTO updateMessageList(Long threadId, Member member);
+    MessageResponseDTO.MessageListDTO updateMessageList(Long threadId, Long cursor, Integer limit, Member member);
 }

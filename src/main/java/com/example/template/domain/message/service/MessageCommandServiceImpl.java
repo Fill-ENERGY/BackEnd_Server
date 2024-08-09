@@ -192,18 +192,31 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     }
 
     @Override
-    public MessageResponseDTO.MessageListDTO updateMessageList(Long threadId, Member member) {
+    public MessageResponseDTO.MessageListDTO updateMessageList(Long threadId, Long cursor, Integer limit, Member member) {
+        // 첫 페이지 로딩 시 매우 큰 ID 값 사용
+        if (cursor == 0) {
+            cursor = Long.MAX_VALUE;
+        }
+
         MessageThread messageThread = messageThreadRepository.findById(threadId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
 
         // 쪽지 상대 찾기
         Member otherParticipant = getOtherParticipant(messageThread, member);
 
-        // 쪽지 목록 조회
-        List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(messageThread, member);
+        // 채팅방 참여 상태 조회
+        MessageParticipant messageParticipant = messageParticipantRepository.findByMemberAndMessageThread(member, messageThread)
+                .orElseThrow(() -> new MessageException(MessageErrorCode.PARTICIPANT_NOT_FOUND));
+
+        // leftAt 이후의 쪽지만 조회
+        List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberAndLeftAtAfterWithCursor(
+                cursor, limit, messageThread, member, messageParticipant.getLeftAt());
+
+        Long nextCursor = messages.isEmpty() ? null : messages.get(messages.size() - 1).getId();
+        boolean hasNext = messages.size() == limit;
 
         // 읽음 상태 업데이트 전 dto 생성(안읽은 쪽지 색상 표시하기 위함)
-        MessageResponseDTO.MessageListDTO messageListDTO = MessageResponseDTO.MessageListDTO.from(messageThread, otherParticipant, messages);
+        MessageResponseDTO.MessageListDTO messageListDTO = MessageResponseDTO.MessageListDTO.from(messageThread, otherParticipant, messages, nextCursor, hasNext);
 
         // 읽지 않은 쪽지 상태 업데이트
         List<Message> unreadMessages = messages.stream()

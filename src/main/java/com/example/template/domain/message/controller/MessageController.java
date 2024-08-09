@@ -49,16 +49,30 @@ public class MessageController {
     // TODO: 페이지네이션
     @GetMapping("/threads/{threadId}/messages")
     @Operation(summary = "쪽지 목록 조회 API", description = "채팅방의 쪽지 목록을 조회합니다.")
-    public ApiResponse<MessageResponseDTO.MessageListDTO> getMessageList(@PathVariable("threadId") Long threadId, @AuthenticatedMember Member member) {
-        MessageResponseDTO.MessageListDTO messageListDTO= messageQueryService.getMessageList(threadId, member);
+    @Parameters({
+            @Parameter(name = "cursor", description = "마지막 쪽지 id(messageId)"),
+            @Parameter(name = "limit", description = "가져올 채팅방 개수, default = 10"),
+    })
+    public ApiResponse<MessageResponseDTO.MessageListDTO> getMessageList(@PathVariable("threadId") Long threadId,
+                                                                         @RequestParam(defaultValue = "0") Long cursor,
+                                                                         @RequestParam(defaultValue = "10") Integer limit,
+                                                                         @AuthenticatedMember Member member) {
+        MessageResponseDTO.MessageListDTO messageListDTO= messageQueryService.getMessageList(threadId, cursor, limit, member);
         return ApiResponse.onSuccess(messageListDTO);
     }
 
     // TODO: 페이지네이션
     @PatchMapping("/threads/{threadId}/messages")
     @Operation(summary = "쪽지 목록 조회 및 읽음 상태 업데이트 API", description = "채팅방의 쪽지 목록을 조회하고 읽지 않은 쪽지를 읽음으로 업데이트합니다.")
-    public ApiResponse<MessageResponseDTO.MessageListDTO> updateMessageList(@PathVariable("threadId") Long threadId, @AuthenticatedMember Member member) {
-        MessageResponseDTO.MessageListDTO messageListDTO= messageCommandService.updateMessageList(threadId, member);
+    @Parameters({
+            @Parameter(name = "cursor", description = "마지막 쪽지 id(messageId)"),
+            @Parameter(name = "limit", description = "가져올 채팅방 개수, default = 10"),
+    })
+    public ApiResponse<MessageResponseDTO.MessageListDTO> updateMessageList(@PathVariable("threadId") Long threadId,
+                                                                            @RequestParam(defaultValue = "0") Long cursor,
+                                                                            @RequestParam(defaultValue = "10") Integer limit,
+                                                                            @AuthenticatedMember Member member) {
+        MessageResponseDTO.MessageListDTO messageListDTO= messageCommandService.updateMessageList(threadId, cursor, limit, member);
         return ApiResponse.onSuccess(messageListDTO);
     }
 
