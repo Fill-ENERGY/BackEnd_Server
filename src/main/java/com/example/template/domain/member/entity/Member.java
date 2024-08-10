@@ -24,6 +24,9 @@ public class Member extends BaseEntity {
     @Column(name = "member_name", nullable = false)
     private String name;    // 이름
 
+    @Column(name = "member_nickname", nullable = false)
+    private String nickname;    // 닉네임
+
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "member_password")
     private String password;    // 비밀번호
