@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -113,8 +114,13 @@ public class S3Manager {
     }
 
     // board 디렉토리
-    public String generateBoardKeyName(Uuid uuid) {
-        return amazonConfig.getBoardPath() + '/' + uuid.getUuid();
+    public String generateBoardKeyName(UUID uuid) {
+        return amazonConfig.getBoardPath() + '/' + uuid.toString();
+    }
+
+    // comment 디렉토리
+    public String generateCommentKeyName(UUID uuid) {
+        return amazonConfig.getCommentPath() + '/' + uuid.toString();
     }
 
     // review 디렉토리
