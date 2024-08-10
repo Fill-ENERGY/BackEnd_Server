@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MessageThreadRepository extends JpaRepository<MessageThread, Long> {
@@ -14,4 +15,7 @@ public interface MessageThreadRepository extends JpaRepository<MessageThread, Lo
             "JOIN t.participants p2 " +
             "WHERE p1.member = :member1 AND p2.member = :member2")
     Optional<MessageThread> findByParticipantsMember(@Param("member1") Member member1, @Param("member2") Member member2);
+
+    @Query("SELECT mt FROM MessageThread mt JOIN mt.participants mp WHERE mp.participationStatus = 'LEFT' GROUP BY mt HAVING COUNT(mp) = 2")
+    List<MessageThread> findAllThreadsWithAllParticipantsLeft();
 }

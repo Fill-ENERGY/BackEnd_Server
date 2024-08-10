@@ -1,8 +1,7 @@
 package com.example.template.domain.message.service;
 
+import com.example.template.domain.block.repository.BlockRepository;
 import com.example.template.domain.member.entity.Member;
-import com.example.template.domain.member.exception.MemberErrorCode;
-import com.example.template.domain.member.exception.MemberException;
 import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.domain.message.dto.response.MessageResponseDTO;
 import com.example.template.domain.message.entity.*;
@@ -13,15 +12,15 @@ import com.example.template.domain.message.exception.MessageException;
 import com.example.template.domain.message.repository.MessageParticipantRepository;
 import com.example.template.domain.message.repository.MessageRepository;
 import com.example.template.domain.message.repository.MessageThreadRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,9 +31,10 @@ public class MessageQueryServiceImpl implements MessageQueryService {
     private final MemberRepository memberRepository;
     private final MessageParticipantRepository messageParticipantRepository;
     private final MessageThreadRepository messageThreadRepository;
+    private final BlockRepository blockRepository;
 
     @Override
-    public MessageResponseDTO.MessageDTO getMessage(Long messageId) {
+    public MessageResponseDTO.MessageDTO getMessage(Long messageId, Member member) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.MESSAGE_NOT_FOUND));
 
@@ -42,42 +42,48 @@ public class MessageQueryServiceImpl implements MessageQueryService {
     }
 
     @Override
-    public List<MessageResponseDTO.ThreadListDTO> getThreadList() {
-        // TODO 현재 로그인한 멤버 정보 받아오기
-        Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+    public MessageResponseDTO.ThreadListDTO getThreadList(LocalDateTime cursor, Long lastId, Integer limit, Member member) {
+        // 차단한 멤버 목록 조회
+        List<Member> blockedMembers = blockRepository.findTargetMembersByMember(member);
 
-        // 참여 중인 채팅방 목록 조회
-        List<MessageParticipant> participantList = messageParticipantRepository.findByMemberAndParticipationStatus(member, ParticipationStatus.ACTIVE);
+        // 차단한 멤버를 제외한 참여 중인 채팅방 목록 조회 (커서 기반 쿼리 사용)
+        List<MessageParticipant> participantList = messageParticipantRepository.findByMemberAndParticipationStatusWithCursor(
+                member, ParticipationStatus.ACTIVE, blockedMembers, cursor, lastId, PageRequest.of(0, limit)
+        );
 
-        return participantList.stream()
-                .map(participant -> {
-                    MessageThread thread = participant.getMessageThread();
+        List<MessageResponseDTO.ThreadDetailListDTO> threadDetailListDTOS = new ArrayList<>();
 
-                    // 최신 쪽지 조회(커스컴 쿼리 -> 멤버가 전송자 또는 수신자이면서 삭제하지 않은 쪽지)
-                    Pageable pageable = PageRequest.of(0, 1);
-                    List<Message> latestMessages = messageRepository.findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(thread, member, pageable);
+        for (MessageParticipant participant : participantList) {
+            MessageThread thread = participant.getMessageThread();
 
-                    MessageResponseDTO.RecentMessage recentMessage = latestMessages.stream()
-                            .findFirst()
-                            .map(MessageResponseDTO.RecentMessage::from)
-                            .orElse(null);
+            // 쪽지 상대 찾기
+            Member otherParticipant = getOtherParticipant(thread, member);
 
-                    // 받은 쪽지 중 읽지 않고 삭제하지 않은 쪽지 개수
-                    long unreadMessageCount = messageRepository.countByMessageThreadAndReceiverAndReadStatusAndDeletedByRecFalse(thread, member, ReadStatus.NOT_READ);
+            // 최신 쪽지 조회(커스컴 쿼리 -> 멤버가 전송자 또는 수신자이면서 삭제하지 않은 쪽지)
+            Pageable pageable = PageRequest.of(0, 1);
+            List<Message> latestMessages = messageRepository.findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(thread, member, pageable);
 
-                    // 쪽지 상대 찾기
-                    Member otherParticipant = getOtherParticipant(thread, member);
+            MessageResponseDTO.RecentMessage recentMessage = latestMessages.stream()
+                    .findFirst()
+                    .map(MessageResponseDTO.RecentMessage::from)
+                    .orElse(null);
 
-                    return MessageResponseDTO.ThreadListDTO.of(participant, recentMessage, (int) unreadMessageCount, otherParticipant);
-                })
-                .collect(Collectors.toList());
+            // 받은 쪽지 중 읽지 않고 삭제하지 않은 쪽지 개수
+            long unreadMessageCount = messageRepository.countByMessageThreadAndReceiverAndReadStatusAndDeletedByRecFalse(thread, member, ReadStatus.NOT_READ);
+
+            threadDetailListDTOS.add(MessageResponseDTO.ThreadDetailListDTO.of(participant, recentMessage, (int) unreadMessageCount, otherParticipant));
+        }
+
+        // 다음 페이지 커서 설정
+        LocalDateTime nextCursor = threadDetailListDTOS.isEmpty() ? null : threadDetailListDTOS.get(threadDetailListDTOS.size() - 1).getUpdatedAt();
+        Long nextId = threadDetailListDTOS.isEmpty() ? null : threadDetailListDTOS.get(threadDetailListDTOS.size() - 1).getThreadId();
+        boolean hasNext = threadDetailListDTOS.size() == limit;
+
+        return MessageResponseDTO.ThreadListDTO.of(threadDetailListDTOS, nextCursor, nextId, hasNext);
     }
 
     @Override
-    public MessageResponseDTO.ThreadDTO getThread(Long writerId) {
-        Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+    public MessageResponseDTO.ThreadDTO getThread(Long writerId, Member member) {
         Member writer = memberRepository.findById(writerId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.OTHER_PARTICIPANT_NOT_FOUND));
 
@@ -98,10 +104,12 @@ public class MessageQueryServiceImpl implements MessageQueryService {
     }
 
     @Override
-    public MessageResponseDTO.MessageListDTO getMessageList(Long threadId) {
-        // TODO 현재 로그인한 멤버 정보 받아오기
-        Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+    public MessageResponseDTO.MessageListDTO getMessageList(Long threadId, Long cursor, Integer limit, Member member) {
+        // 첫 페이지 로딩 시 매우 큰 ID 값 사용
+        if (cursor == 0) {
+            cursor = Long.MAX_VALUE;
+        }
+
         MessageThread messageThread = messageThreadRepository.findById(threadId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
 
@@ -113,10 +121,13 @@ public class MessageQueryServiceImpl implements MessageQueryService {
                 .orElseThrow(() -> new MessageException(MessageErrorCode.PARTICIPANT_NOT_FOUND));
 
         // leftAt 이후의 쪽지만 조회
-        List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberAndLeftAtAfter(
-                messageThread, member, messageParticipant.getLeftAt());
+        List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberAndLeftAtAfterWithCursor(
+                cursor, limit, messageThread, member, messageParticipant.getLeftAt());
 
-        return MessageResponseDTO.MessageListDTO.from(messageThread, otherParticipant, messages);
+        Long nextCursor = messages.isEmpty() ? null : messages.get(messages.size() - 1).getId();
+        boolean hasNext = messages.size() == limit;
+
+        return MessageResponseDTO.MessageListDTO.from(messageThread, otherParticipant, messages, nextCursor, hasNext);
     }
 
 
@@ -134,4 +145,5 @@ public class MessageQueryServiceImpl implements MessageQueryService {
         }
         return otherParticipant;
     }
+
 }

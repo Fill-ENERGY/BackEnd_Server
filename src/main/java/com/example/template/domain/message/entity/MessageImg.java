@@ -1,5 +1,6 @@
 package com.example.template.domain.message.entity;
 
+import com.example.template.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,7 +9,7 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity
-public class MessageImg {
+public class MessageImg extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,4 +22,11 @@ public class MessageImg {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "message_id")
     private Message message;
+
+    public void setMessage(Message message) {
+        if(this.message != null)
+            message.getImages().remove(this);
+        this.message = message;
+        message.getImages().add(this);
+    }
 }
