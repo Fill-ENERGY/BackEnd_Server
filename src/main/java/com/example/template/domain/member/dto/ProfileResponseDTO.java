@@ -12,7 +12,6 @@ public class ProfileResponseDTO {
 
     public static ProfileDTO from(Member member){
         return ProfileDTO.builder()
-                .email(member.getEmail())
                 .profileImg(member.getProfileImg())
                 .createdAt(member.getCreatedAt())
                 .name(member.getName())
@@ -24,11 +23,9 @@ public class ProfileResponseDTO {
     @Builder
     public static class ProfileDTO{
         private String profileImg;
-        private String email;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
         private String name;
-
     }
 
 

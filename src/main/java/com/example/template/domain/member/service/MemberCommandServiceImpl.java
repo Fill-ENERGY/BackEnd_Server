@@ -25,19 +25,4 @@ public class MemberCommandServiceImpl implements MemberCommandService{
 
         return ProfileResponseDTO.from(member);
     }
-
-//    @Override
-//    public Boolean createProfile(Long memberId, ProfileRequestDTO.CreateProfileDTO createProfileDTO) {
-//        Member member = ProfileRequestDTO.toEntity(createProfileDTO);
-//        //s3에 사진 저장
-//        memberRepository.save(member);
-//        return true;
-//    }
-
-    @Override
-    public Long deleteProfile(Long memberId) {
-
-        memberRepository.deleteById(memberId);
-        return memberId;
-    }
 }

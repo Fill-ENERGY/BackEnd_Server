@@ -39,7 +39,6 @@ public class Member extends BaseEntity {
 
     public void updateProfile(ProfileRequestDTO.UpdateProfileDTO updateProfileDTO) {
         this.name = updateProfileDTO.getName();
-        this.email = updateProfileDTO.getEmail();
-        this.profileImg = updateProfileDTO.getEmail();
+        this.profileImg = updateProfileDTO.getProfileImg();
     }
 }

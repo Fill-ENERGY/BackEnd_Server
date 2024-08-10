@@ -7,8 +7,4 @@ public interface MemberCommandService {
 
     ProfileResponseDTO.ProfileDTO updateProfile(Long memberId, ProfileRequestDTO.UpdateProfileDTO updateProfileDTO);
 
-   // Boolean createProfile(Long memberId, ProfileRequestDTO.CreateProfileDTO createProfileDTO);
-
-    Long deleteProfile(Long memberId);
-
 }
