@@ -33,6 +33,9 @@ public class S3Config {
     @Value("${cloud.aws.s3.path.board}")
     private String boardPath;
 
+    @Value("${cloud.aws.s3.path.comment}")
+    private String commentPath;
+
     @Value("${cloud.aws.s3.path.review}")
     private String reviewPath;
 
