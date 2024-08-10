@@ -33,8 +33,8 @@ public class ProfileController {
         return ApiResponse.onSuccess(memberQueryService.getProfile(memberId));
     }
 
-    @Operation(summary = "다른 사용자 프로필 조회", description = "채팅 또는 댓글 프로필 클릭 시 해당 사용자의 프로필 조회")
-    @DeleteMapping("")
+    @Operation(summary = "사용자 프로필 수정")
+    @PatchMapping("")
     public ApiResponse<ProfileResponseDTO.ProfileDTO> updateProfile(@AuthenticatedMember Member member, @RequestBody ProfileRequestDTO.UpdateProfileDTO requestDto){
         return ApiResponse.onSuccess(memberCommandService.updateProfile(member.getId(), requestDto));
     }
