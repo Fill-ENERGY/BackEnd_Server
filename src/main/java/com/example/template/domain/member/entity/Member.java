@@ -40,8 +40,8 @@ public class Member extends BaseEntity {
     @Column(name = "is_reported")
     private boolean isReported; // 신고 상태
 
-    public void updateProfile(ProfileRequestDTO.UpdateProfileDTO updateProfileDTO) {
+    public void updateProfile(ProfileRequestDTO.UpdateProfileDTO updateProfileDTO, String imageUrl) {
         this.nickname = updateProfileDTO.getNickname();
-        this.profileImg = updateProfileDTO.getProfileImg();
+        this.profileImg = imageUrl;
     }
 }

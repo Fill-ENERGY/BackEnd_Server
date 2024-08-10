@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -35,8 +36,9 @@ public class ProfileController {
 
     @Operation(summary = "프로필 수정")
     @PatchMapping("")
-    public ApiResponse<ProfileResponseDTO.ProfileDTO> updateProfile(@AuthenticatedMember Member member, @RequestBody ProfileRequestDTO.UpdateProfileDTO requestDto){
-        return ApiResponse.onSuccess(memberCommandService.updateProfile(member.getId(), requestDto));
+    public ApiResponse<ProfileResponseDTO.ProfileDTO> updateProfile(@AuthenticatedMember Member member, @RequestPart(value = "file") MultipartFile file,
+                                                                    @RequestPart ProfileRequestDTO.UpdateProfileDTO requestDto){
+        return ApiResponse.onSuccess(memberCommandService.updateProfile(member, file, requestDto));
     }
 
 }

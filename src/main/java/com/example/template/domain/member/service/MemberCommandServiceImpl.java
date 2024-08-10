@@ -3,25 +3,33 @@ package com.example.template.domain.member.service;
 import com.example.template.domain.member.dto.ProfileRequestDTO;
 import com.example.template.domain.member.dto.ProfileResponseDTO;
 import com.example.template.domain.member.entity.Member;
-import com.example.template.domain.member.exception.MemberErrorCode;
-import com.example.template.domain.member.exception.MemberException;
 import com.example.template.domain.member.repository.MemberRepository;
+import com.example.template.global.config.aws.S3Manager;
+import com.example.template.global.util.s3.entity.Uuid;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.UUID;
 
 @AllArgsConstructor
 @Service
 @Transactional
 public class MemberCommandServiceImpl implements MemberCommandService{
 
-    private final MemberRepository memberRepository;
+    private final S3Manager s3Manager;
+    @Override
+    public ProfileResponseDTO.ProfileDTO updateProfile(Member member, MultipartFile file, ProfileRequestDTO.UpdateProfileDTO updateProfileDTO) {
 
-    public ProfileResponseDTO.ProfileDTO updateProfile(Long memberId, ProfileRequestDTO.UpdateProfileDTO updateProfileDTO) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
-        //s3에서 프로필 업데이트 필요 + s3에서 이전 프로필 삭제 로직 추후 추가
-        member.updateProfile(updateProfileDTO);
+        s3Manager.deleteFile(member.getProfileImg());
+
+        String uuid = UUID.randomUUID().toString();
+        Uuid savedUuid = Uuid.builder().uuid(uuid).build();
+        String key = s3Manager.generateProfileKeyName(savedUuid);
+        String imageUrl = s3Manager.uploadFile(key, file);
+
+        member.updateProfile(updateProfileDTO, imageUrl);
 
         return ProfileResponseDTO.from(member);
     }
