@@ -13,7 +13,7 @@ public class ProfileRequestDTO {
     @Builder
     public static class UpdateProfileDTO{
         private String profileImg;
-        private String name;
+        private String nickname;
     }
 
 }

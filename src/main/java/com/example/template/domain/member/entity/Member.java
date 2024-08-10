@@ -41,7 +41,7 @@ public class Member extends BaseEntity {
     private boolean isReported; // 신고 상태
 
     public void updateProfile(ProfileRequestDTO.UpdateProfileDTO updateProfileDTO) {
-        this.name = updateProfileDTO.getName();
+        this.nickname = updateProfileDTO.getNickname();
         this.profileImg = updateProfileDTO.getProfileImg();
     }
 }

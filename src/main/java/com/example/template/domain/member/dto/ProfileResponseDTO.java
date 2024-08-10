@@ -16,6 +16,7 @@ public class ProfileResponseDTO {
                 .createdAt(member.getCreatedAt())
                 .name(member.getName())
                 .updatedAt(member.getUpdatedAt())
+                .nickname(member.getNickname())
                 .build();
     }
 
@@ -26,6 +27,7 @@ public class ProfileResponseDTO {
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
         private String name;
+        private String nickname;
     }
 
 
