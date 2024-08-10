@@ -10,7 +10,6 @@ import com.example.template.domain.board.exception.BoardException;
 import com.example.template.domain.board.repository.BoardRepository;
 import com.example.template.domain.board.repository.CommentRepository;
 import com.example.template.domain.member.entity.Member;
-import com.example.template.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +23,6 @@ public class BoardQueryServiceImpl implements BoardQueryService {
 
     private final BoardRepository boardRepository;
     private final CommentRepository commentRepository;
-    private final MemberRepository memberRepository;
 
     @Override
     public BoardResponseDTO.BoardListDTO getBoardList(Category category,

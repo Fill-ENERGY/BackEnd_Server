@@ -20,7 +20,7 @@ public class BoardResponseDTO {
     }
 
 
-        @Getter
+    @Getter
     @Builder
     public static class BoardDTO {
         private Long id;

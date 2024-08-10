@@ -54,9 +54,9 @@ public class BoardController {
     // CommandService
     @Operation(summary = "이미지 업로드", description = "게시글에 첨부할 이미지를 업로드합니다.")
     @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<BoardResponseDTO.BoardImgDTO> uploadImages(
+    public ApiResponse<BoardResponseDTO.BoardImgDTO> uploadBoardImages(
             @RequestPart("images") List<MultipartFile> images) {
-        return ApiResponse.onSuccess(boardCommandService.uploadImages(images));
+        return ApiResponse.onSuccess(boardCommandService.uploadBoardImages(images));
     }
 
     @Operation(summary = "게시글 작성", description = "새로운 게시글을 작성합니다.")
