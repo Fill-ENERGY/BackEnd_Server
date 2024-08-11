@@ -19,4 +19,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
     default List<Block> findByMemberWithCursor(Long cursor, Integer limit, Member member) {
         return findByMemberWithCursor(cursor, member, PageRequest.of(0, limit));
     }
+
+    @Query("SELECT b.targetMember FROM Block b WHERE b.member = :member")
+    List<Member> findTargetMembersByMember(Member member);
 }
