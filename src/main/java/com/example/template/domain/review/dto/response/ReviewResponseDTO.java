@@ -1,9 +1,10 @@
 package com.example.template.domain.review.dto.response;
 
 import com.example.template.domain.member.dto.ProfileResponseDTO;
-import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.review.entity.Keyword;
 import com.example.template.domain.review.entity.Review;
+import com.example.template.domain.review.entity.ReviewImg;
+import com.example.template.domain.review.entity.ReviewKeyword;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -33,20 +34,22 @@ public class ReviewResponseDTO {
         private String content;
         private Integer recommendationNum;
         private List<KeywordDTO> keywords;
+        private List<String> images;
         private double score;
         // TODO: 공용 유저 응답으로 변경 예정
         private ProfileResponseDTO.ProfileDTO member;
         private boolean isRecommended;
         private String username;
 
-        public static ReviewPreviewDTO of(Review review, List<Keyword> keywords, Member member, boolean isRecommended) {
+        public static ReviewPreviewDTO of(Review review, boolean isRecommended) {
             return ReviewPreviewDTO.builder()
                     .id(review.getId())
                     .content(review.getContent())
                     .recommendationNum(review.getRecommendationNum())
-                    .keywords(keywords.stream().map(KeywordDTO::from).toList())
+                    .keywords(review.getKeywords().stream().map(ReviewKeyword::getKeyword).map(KeywordDTO::from).toList())
+                    .images(review.getImgList().stream().map(ReviewImg::getImgUrl).toList())
                     .score(review.getScore())
-                    .member(ProfileResponseDTO.from(member))
+                    .member(ProfileResponseDTO.from(review.getMember()))
                     .isRecommended(isRecommended)
                     .build();
         }
@@ -63,6 +66,12 @@ public class ReviewResponseDTO {
                     .content(keyword.getDescription())
                     .build();
         }
+    }
+
+    @Getter
+    @Builder
+    public static class ReviewImgDTO {
+        private List<String> images;
     }
 
 }

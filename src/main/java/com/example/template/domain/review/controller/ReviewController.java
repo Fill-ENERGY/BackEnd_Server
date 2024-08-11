@@ -5,6 +5,7 @@ import com.example.template.domain.review.dto.request.ReviewRequestDTO;
 import com.example.template.domain.review.dto.response.ReviewResponseDTO;
 import com.example.template.domain.review.entity.Keyword;
 import com.example.template.domain.review.entity.Review;
+import com.example.template.domain.review.entity.ReviewImg;
 import com.example.template.domain.review.service.KeywordQueryService;
 import com.example.template.domain.review.service.ReviewCommandService;
 import com.example.template.domain.review.service.ReviewQueryService;
@@ -16,7 +17,9 @@ import io.swagger.v3.oas.annotations.Parameters;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -52,7 +55,7 @@ public class ReviewController {
         List<Review> reviewList = reviewQueryService.getReviewsOfStations(stationId, lastId, query, offset);
         return ApiResponse.onSuccess(reviewList
                 .stream()
-                .map(review -> ReviewResponseDTO.ReviewPreviewDTO.of(review, keywordQueryService.getKeywordsOfReview(review.getId()), member, reviewCommandService.isRecommended(review.getId(), member)))
+                .map(review -> ReviewResponseDTO.ReviewPreviewDTO.of(review, reviewCommandService.isRecommended(review.getId(), member)))
                 .toList()
         );
     }
@@ -63,7 +66,7 @@ public class ReviewController {
         List<Review> reviewList = reviewQueryService.getReviewsOfUsers(member);
         return ApiResponse.onSuccess(reviewList
                 .stream()
-                .map(review -> ReviewResponseDTO.ReviewPreviewDTO.of(review, keywordQueryService.getKeywordsOfReview(review.getId()), member, reviewCommandService.isRecommended(review.getId(), member)))
+                .map(review -> ReviewResponseDTO.ReviewPreviewDTO.of(review, reviewCommandService.isRecommended(review.getId(), member)))
                 .toList()
         );
     }
@@ -73,7 +76,7 @@ public class ReviewController {
     public ApiResponse<ReviewResponseDTO.ReviewPreviewDTO> getReview(@AuthenticatedMember Member member,
                                                                      @PathVariable Long reviewId) {
         Review review = reviewQueryService.getReview(reviewId);
-        return ApiResponse.onSuccess(ReviewResponseDTO.ReviewPreviewDTO.of(review, keywordQueryService.getKeywordsOfReview(reviewId), member, reviewCommandService.isRecommended(review.getId(), member)));
+        return ApiResponse.onSuccess(ReviewResponseDTO.ReviewPreviewDTO.of(review, reviewCommandService.isRecommended(review.getId(), member)));
     }
 
     @GetMapping("/keywords")
@@ -90,7 +93,7 @@ public class ReviewController {
                                                                         @RequestBody ReviewRequestDTO.UpdateReviewRequestDTO request) {
         Review review = reviewCommandService.updateReview(reviewId, request);
         return ApiResponse.onSuccess(
-                ReviewResponseDTO.ReviewPreviewDTO.of(review, keywordQueryService.getKeywordsOfReview(reviewId), member, reviewCommandService.isRecommended(review.getId(), member))
+                ReviewResponseDTO.ReviewPreviewDTO.of(review, reviewCommandService.isRecommended(review.getId(), member))
         );
     }
 
@@ -105,5 +108,15 @@ public class ReviewController {
     @Operation(summary = "평가 추천 API", description = "평가 추천 및 추천 취소 API")
     public ApiResponse<Boolean> recommendReview(@AuthenticatedMember Member member, @PathVariable Long reviewId) {
         return ApiResponse.onSuccess(reviewCommandService.recommendReview(member, reviewId));
+    }
+
+    @Operation(summary = "이미지 업로드", description = "평가에 첨부할 이미지를 미리 업로드")
+    @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<ReviewResponseDTO.ReviewImgDTO> uploadImages(
+            @RequestPart("images") List<MultipartFile> images) {
+        List<ReviewImg> reviewImgList = reviewCommandService.uploadImg(images);
+        return ApiResponse.onSuccess(ReviewResponseDTO.ReviewImgDTO.builder().
+                images(reviewImgList.stream().map(ReviewImg::getImgUrl).toList())
+                .build());
     }
 }

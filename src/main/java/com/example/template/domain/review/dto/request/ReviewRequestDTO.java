@@ -30,7 +30,7 @@ public class ReviewRequestDTO {
         @Schema(name = "stationId", description = "리뷰를 달 충전소의 id", example = "1")
         @NotNull
         private Long stationId;
-        // TODO: 사진 추가
+        private List<String> imgUrls;
 
         public Review toReview(Member member, Station station) {
             return Review.builder()
@@ -55,6 +55,6 @@ public class ReviewRequestDTO {
         @Schema(name = "score", description = "수정할 점수", example = "4.7")
         private double score;
         private List<Keyword> keywords;
-        // TODO: 사진 추가
+        private List<String> imgUrls;
     }
 }
