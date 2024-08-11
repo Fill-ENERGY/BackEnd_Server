@@ -1,34 +1,23 @@
 package com.example.template.domain.member.dto;
 
-import com.example.template.domain.member.entity.Member;
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 
+@Getter
+@Builder
 public class ProfileRequestDTO {
-
-    //프로필에 어떤 정보가 들어 갈지 확정이 안되어 임의로 넣음 (추후변경 예정)
+    //추후 프로필에 관한 내용이 수정 될 수 있음
     @Getter
     @Builder
     public static class UpdateProfileDTO{
-        private String profileImg;
-        private String email;
-        private String name;
+        private String nickname;
+
+        @JsonCreator
+        public UpdateProfileDTO(@JsonProperty("nickname") String nickname) {
+            this.nickname = nickname;
+        }
     }
 
-    @Getter
-    @Builder
-    public static class CreateProfileDTO{
-        private String profileImg;
-        private String email;
-        private String name;
-    }
-
-    public static Member toEntity(CreateProfileDTO createProfileDTO) {
-        return Member.builder()
-                .email(createProfileDTO.email)
-                .profileImg(createProfileDTO.profileImg)
-                .name(createProfileDTO.name)
-                .build();
-    }
 }

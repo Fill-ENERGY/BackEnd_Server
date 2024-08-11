@@ -24,6 +24,9 @@ public class Member extends BaseEntity {
     @Column(name = "member_name", nullable = false)
     private String name;    // 이름
 
+    @Column(name = "member_nickname", nullable = false)
+    private String nickname;    // 닉네임
+
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "member_password")
     private String password;    // 비밀번호
@@ -37,9 +40,8 @@ public class Member extends BaseEntity {
     @Column(name = "is_reported")
     private boolean isReported; // 신고 상태
 
-    public void updateProfile(ProfileRequestDTO.UpdateProfileDTO updateProfileDTO) {
-        this.name = updateProfileDTO.getName();
-        this.email = updateProfileDTO.getEmail();
-        this.profileImg = updateProfileDTO.getEmail();
+    public void updateProfile(ProfileRequestDTO.UpdateProfileDTO updateProfileDTO, String imageUrl) {
+        this.nickname = updateProfileDTO.getNickname();
+        this.profileImg = imageUrl;
     }
 }
