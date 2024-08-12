@@ -60,7 +60,7 @@ public class ReviewController {
         );
     }
 
-    @GetMapping("/users")
+    @GetMapping("/members")
     @Operation(summary = "본인 평가 목록 가져오는 API", description = "로그인된 유저가 작성한 평가 목록 전체 조회")
     public ApiResponse<List<ReviewResponseDTO.ReviewPreviewDTO>> getReviewsOfUsers(@AuthenticatedMember Member member) {
         List<Review> reviewList = reviewQueryService.getReviewsOfUsers(member);

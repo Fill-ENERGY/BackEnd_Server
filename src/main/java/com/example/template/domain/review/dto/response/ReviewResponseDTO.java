@@ -1,6 +1,5 @@
 package com.example.template.domain.review.dto.response;
 
-import com.example.template.domain.member.dto.ProfileResponseDTO;
 import com.example.template.domain.review.entity.Keyword;
 import com.example.template.domain.review.entity.Review;
 import com.example.template.domain.review.entity.ReviewImg;
@@ -36,8 +35,8 @@ public class ReviewResponseDTO {
         private List<KeywordDTO> keywords;
         private List<String> images;
         private double score;
-        // TODO: 공용 유저 응답으로 변경 예정
-        private ProfileResponseDTO.ProfileDTO member;
+        private Long authorId;
+        private String authorName;
         private boolean isRecommended;
         private String username;
 
@@ -49,7 +48,8 @@ public class ReviewResponseDTO {
                     .keywords(review.getKeywords().stream().map(ReviewKeyword::getKeyword).map(KeywordDTO::from).toList())
                     .images(review.getImgList().stream().map(ReviewImg::getImgUrl).toList())
                     .score(review.getScore())
-                    .member(ProfileResponseDTO.from(review.getMember()))
+                    .authorId(review.getMember().getId())
+                    .authorName(review.getMember().getName())
                     .isRecommended(isRecommended)
                     .build();
         }

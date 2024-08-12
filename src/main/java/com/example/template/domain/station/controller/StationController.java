@@ -11,7 +11,6 @@ import com.example.template.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -79,7 +78,7 @@ public class StationController {
         return ApiResponse.onSuccess(favoriteCommandService.addOrRemoveFavorite(member, stationId));
     }
 
-    @GetMapping("/stations/users")
+    @GetMapping("/stations/members")
     @Operation(summary = "즐겨찾기한 충전소 조회", description = "내가 즐겨찾기한 충전소 조회")
     public ApiResponse<List<StationResponseDTO.StationPreviewDTO>> getFavoriteStations(@AuthenticatedMember Member member,
                                                                                        @RequestParam("latitude") double latitude,
