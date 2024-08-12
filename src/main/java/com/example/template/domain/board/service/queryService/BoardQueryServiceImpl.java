@@ -2,13 +2,11 @@ package com.example.template.domain.board.service.queryService;
 
 import com.example.template.domain.board.dto.response.BoardResponseDTO;
 import com.example.template.domain.board.entity.Board;
-import com.example.template.domain.board.entity.Comment;
 import com.example.template.domain.board.entity.enums.Category;
 import com.example.template.domain.board.entity.enums.SortType;
 import com.example.template.domain.board.exception.BoardErrorCode;
 import com.example.template.domain.board.exception.BoardException;
 import com.example.template.domain.board.repository.BoardRepository;
-import com.example.template.domain.board.repository.CommentRepository;
 import com.example.template.domain.member.entity.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,7 +20,6 @@ import java.util.List;
 public class BoardQueryServiceImpl implements BoardQueryService {
 
     private final BoardRepository boardRepository;
-    private final CommentRepository commentRepository;
 
     @Override
     public BoardResponseDTO.BoardListDTO getBoardList(Category category,
@@ -59,7 +56,6 @@ public class BoardQueryServiceImpl implements BoardQueryService {
     public BoardResponseDTO.BoardDetailDTO getBoardDetail(Long boardId, Member member) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
-        List<Comment> comments = commentRepository.findByBoardId(boardId);
-        return BoardResponseDTO.BoardDetailDTO.of(board, comments, member.getId());
+        return BoardResponseDTO.BoardDetailDTO.of(board, member);
     }
 }

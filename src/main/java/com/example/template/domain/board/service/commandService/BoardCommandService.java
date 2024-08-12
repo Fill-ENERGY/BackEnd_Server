@@ -8,7 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface BoardCommandService {
-    BoardResponseDTO.BoardImgDTO uploadImages(List<MultipartFile> images);
+    BoardResponseDTO.BoardImgDTO uploadBoardImages(List<MultipartFile> images);
     BoardResponseDTO.BoardDTO createBoard(BoardRequestDTO.CreateBoardDTO createBoardDTO, Member member);
     BoardResponseDTO.BoardDTO updateBoard(Long boardId, BoardRequestDTO.UpdateBoardDTO updateBoardDTO, Member member);
     Long deleteBoard(Long boardId, Member member);

@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 public class BoardException extends GeneralException {
-    public BoardException(BaseErrorCode errorCode) {
+    public BoardException(BoardErrorCode errorCode) {
         super(errorCode);
     }
 }

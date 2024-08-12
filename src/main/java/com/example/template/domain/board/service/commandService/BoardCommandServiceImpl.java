@@ -13,8 +13,6 @@ import com.example.template.domain.board.repository.BoardLikeRepository;
 import com.example.template.domain.board.repository.BoardRepository;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.global.config.aws.S3Manager;
-import com.example.template.global.util.s3.entity.Uuid;
-import com.example.template.global.util.s3.repository.UuidRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,26 +32,19 @@ public class BoardCommandServiceImpl implements BoardCommandService {
     private final BoardRepository boardRepository;
     private final BoardLikeRepository boardLikeRepository;
     private final BoardImgRepository boardImgRepository;
-    private final UuidRepository uuidRepository;
     private final S3Manager s3Manager;
 
     @Override
-    public BoardResponseDTO.BoardImgDTO uploadImages(List<MultipartFile> images) {
+    public BoardResponseDTO.BoardImgDTO uploadBoardImages(List<MultipartFile> images) {
         List<String> keyNames = new ArrayList<>();
-        List<Uuid> uuids = new ArrayList<>();
 
-        // UUID 생성 및 키 이름 생성
+        // 키 이름 생성
         for (MultipartFile image : images) {
             if (image != null && !image.isEmpty()) {
-                String uuid = UUID.randomUUID().toString();
-                Uuid savedUuid = Uuid.builder().uuid(uuid).build();
-                uuids.add(savedUuid);
-                keyNames.add(s3Manager.generateBoardKeyName(savedUuid));
+                UUID uuid = UUID.randomUUID();
+                keyNames.add(s3Manager.generateBoardKeyName(uuid));
             }
         }
-
-        // UUID 일괄 저장
-        uuidRepository.saveAll(uuids);
 
         // S3에 파일 일괄 업로드
         List<String> imageUrls = s3Manager.uploadFiles(keyNames, images);
@@ -155,10 +146,12 @@ public class BoardCommandServiceImpl implements BoardCommandService {
         // 연관된 이미지 처리
         List<BoardImg> images = board.getImages();
         if (!images.isEmpty()) {
-            // S3에서 이미지 파일 삭제 (옵션)
-            for (BoardImg image : images) {
-                s3Manager.deleteFile(image.getBoardImgUrl());
-            }
+            // S3에서 이미지 파일 일괄 삭제
+            List<String> imageUrls = images.stream()
+                    .map(BoardImg::getBoardImgUrl)
+                    .toList();
+            s3Manager.deleteFiles(imageUrls);
+
             // 데이터베이스에서 BoardImg 엔티티 삭제
             boardImgRepository.deleteAll(images);
         }
@@ -219,7 +212,6 @@ public class BoardCommandServiceImpl implements BoardCommandService {
 
         return BoardResponseDTO.BoardLikeDTO.from(board, member.getId());
     }
-
 
     /*
     is_author을 Boolean 값으로 넘겨주어 프론트엔드에서 UI 레벨의 제어를 하지만
