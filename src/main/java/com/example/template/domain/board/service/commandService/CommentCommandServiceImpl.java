@@ -96,6 +96,7 @@ public class CommentCommandServiceImpl implements  CommentCommandService{
             parentComment.addChild(comment);
         }
 
+        // 이미지 처리
         if (createDTO.getImages() != null && !createDTO.getImages().isEmpty()) {
             List<CommentImg> commentImgs = commentImgRepository.findAllByCommentImgUrlIn(createDTO.getImages());
 
@@ -108,6 +109,10 @@ public class CommentCommandServiceImpl implements  CommentCommandService{
         }
 
         Comment savedComment = commentRepository.save(comment);
+
+        // 게시글의 댓글 수 증가
+        board.incrementCommentCount();
+        boardRepository.save(board);
 
         return CommentResponseDTO.CommentDTO.from(savedComment, currentMember);
     }
@@ -190,30 +195,34 @@ public class CommentCommandServiceImpl implements  CommentCommandService{
             throw new CommentException(CommentErrorCode.COMMENT_BOARD_MISMATCH);
         }
 
+        Board board = comment.getBoard();
         if (comment.isTopLevelComment()) {
-            handleTopLevelCommentDeletion(comment);
+            handleTopLevelCommentDeletion(board, comment);
         } else {
-            handleReplyDeletion(comment);
+            handleReplyDeletion(board, comment);
         }
 
         return commentId;
     }
 
     // 최상위 댓글 삭제
-    private void handleTopLevelCommentDeletion(Comment comment) {
+    private void handleTopLevelCommentDeletion(Board board, Comment comment) {
         if (comment.hasChildren()) {
             // 3. 대댓글이 있는 최상위 댓글의 경우
             softDeleteComment(comment);
+            board.decrementCommentCount();
         } else {
             // 1. 대댓글이 없는 최상위 댓글의 경우
             hardDeleteComment(comment);
+            board.decrementCommentCount();
         }
     }
 
     // 대댓글 삭제
-    private void handleReplyDeletion(Comment comment) {
+    private void handleReplyDeletion(Board board, Comment comment) {
         // 2. 하위 댓글이 없는 대댓글의 경우
         hardDeleteComment(comment);
+        board.decrementCommentCount();
 
         // 4. 최상위 댓글이 삭제되었고 이것이 마지막 대댓글인 경우
         Comment topLevelComment = comment.getParent();
@@ -222,6 +231,7 @@ public class CommentCommandServiceImpl implements  CommentCommandService{
             long remainingReplies = commentRepository.countByParentIdAndIdNot(topLevelComment.getId(), comment.getId());
             if (remainingReplies == 0) {
                 hardDeleteComment(topLevelComment);
+                board.decrementCommentCount(); // 부모 댓글도 완전히 삭제되므로 추가로 1 감소
             }
         }
     }

@@ -26,8 +26,6 @@ public class CommentQueryServiceImpl implements CommentQueryService {
 
     @Override
     public CommentResponseDTO.CommentsListDTO getCommentsList(Long boardId, Member member) {
-        Board board = boardRepository.findById(boardId)
-                .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
 
         List<Comment> comments = commentRepository.findByBoardId(boardId);
 
