@@ -123,7 +123,7 @@ public class ReviewCommandServiceImpl implements ReviewCommandService {
     }
 
     @Override
-    public Long deleteReview(Long reviewId) {
+    public Review deleteReview(Long reviewId) {
 
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new ReviewException(ReviewErrorCode.NOT_FOUND));
 
@@ -143,23 +143,28 @@ public class ReviewCommandServiceImpl implements ReviewCommandService {
 
         // review 삭제
         reviewRepository.delete(review);
-        return reviewId;
+        return review;
     }
 
     @Override
-    public boolean recommendReview(Member member, Long reviewId) {
+    public Review recommendReview(Member member, Long reviewId) {
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new ReviewException(ReviewErrorCode.NOT_FOUND));
         reviewRecommendRepository.findByMemberIsAndReviewIs(member, review).ifPresentOrElse(
-                reviewRecommendRepository::delete,
-                () -> reviewRecommendRepository.save(
+                reviewRecommend -> {
+                    reviewRecommendRepository.delete(reviewRecommend);
+                    review.decrementLikeCount();
+                },
+                () -> {
+                    reviewRecommendRepository.save(
                             ReviewRecommend.builder()
                                     .review(review)
                                     .member(member)
-                                    .build()
-                    )
+                                    .build());
+                    review.incrementLikeCount();
+                }
         );
         // 추천 수는 트리거로
-        return true;
+        return review;
     }
 
     @Override

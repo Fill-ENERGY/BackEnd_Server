@@ -9,6 +9,7 @@ import com.example.template.domain.review.entity.ReviewImg;
 import com.example.template.domain.review.service.KeywordQueryService;
 import com.example.template.domain.review.service.ReviewCommandService;
 import com.example.template.domain.review.service.ReviewQueryService;
+import com.example.template.domain.station.service.StationCommandService;
 import com.example.template.global.annotation.AuthenticatedMember;
 import com.example.template.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,12 +32,14 @@ public class ReviewController {
     private final ReviewQueryService reviewQueryService;
     private final ReviewCommandService reviewCommandService;
     private final KeywordQueryService keywordQueryService;
+    private final StationCommandService stationCommandService;
 
     @PostMapping
     @Operation(summary = "평가 생성 API", description = "Request Body를 이용하여 새로운 평가를 생성합니다. keywords를 제외하고는 모두 필요합니다.")
     public ApiResponse<ReviewResponseDTO.CreateReviewResponseDTO> createReview(@AuthenticatedMember Member member,
                                                                                @Valid @RequestBody ReviewRequestDTO.CreateReviewRequestDTO request) {
         Review review = reviewCommandService.createReview(member, request);
+        stationCommandService.updateScore(request.getStationId());
         return ApiResponse.onSuccess(HttpStatus.CREATED, ReviewResponseDTO.CreateReviewResponseDTO.from(review));
     }
 
@@ -92,6 +95,7 @@ public class ReviewController {
                                                                         @PathVariable Long reviewId,
                                                                         @RequestBody ReviewRequestDTO.UpdateReviewRequestDTO request) {
         Review review = reviewCommandService.updateReview(reviewId, request);
+        stationCommandService.updateScore(review.getStation().getId());
         return ApiResponse.onSuccess(
                 ReviewResponseDTO.ReviewPreviewDTO.of(review, reviewCommandService.isRecommended(review.getId(), member))
         );
@@ -100,14 +104,15 @@ public class ReviewController {
     @DeleteMapping("/{reviewId}")
     @Operation(summary = "평가 삭제 API", description = "평가 하나 삭제하기")
     public ApiResponse<Long> deleteReview(@PathVariable Long reviewId) {
-        Long id = reviewCommandService.deleteReview(reviewId);
-        return ApiResponse.onSuccess(id);
+        Review review = reviewCommandService.deleteReview(reviewId);
+        stationCommandService.updateScore(review.getStation().getId());
+        return ApiResponse.onSuccess(review.getId());
     }
 
     @PostMapping("/{reviewId}")
     @Operation(summary = "평가 추천 API", description = "평가 추천 및 추천 취소 API")
-    public ApiResponse<Boolean> recommendReview(@AuthenticatedMember Member member, @PathVariable Long reviewId) {
-        return ApiResponse.onSuccess(reviewCommandService.recommendReview(member, reviewId));
+    public ApiResponse<ReviewResponseDTO.ReviewRecommendDTO> recommendReview(@AuthenticatedMember Member member, @PathVariable Long reviewId) {
+        return ApiResponse.onSuccess(ReviewResponseDTO.ReviewRecommendDTO.from(reviewCommandService.recommendReview(member, reviewId), member.getId()));
     }
 
     @Operation(summary = "이미지 업로드", description = "평가에 첨부할 이미지를 미리 업로드")

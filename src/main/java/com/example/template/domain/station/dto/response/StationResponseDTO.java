@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.Locale;
 
@@ -29,8 +30,8 @@ public class StationResponseDTO {
         private double longitude;
         // TODO: 평일 주말 구분 논의해보기
         private String dayOfWeek;
-        private LocalTime openTime;
-        private LocalTime closeTime;
+        private String openTime;
+        private String closeTime;
 
         public static StationPreviewDTO of(Station station, double latitude, double longitude) {
             String dayOfWeek  = LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.KOREA);
@@ -59,8 +60,8 @@ public class StationResponseDTO {
                     .scoreCount(station.getReviews().size())
                     .latitude(station.getLatitude())
                     .longitude(station.getLongitude())
-                    .openTime(openTime)
-                    .closeTime(closeTime)
+                    .openTime(openTime.format(DateTimeFormatter.ISO_DATE_TIME))
+                    .closeTime(closeTime.format(DateTimeFormatter.ISO_DATE_TIME))
                     .build();
         }
     }

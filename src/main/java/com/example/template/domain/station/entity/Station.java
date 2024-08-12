@@ -84,4 +84,17 @@ public class Station {
         this.institutionName = station.institutionName;
         this.institutionPhone = station.institutionPhone;
     }
+
+    public void updateScore() {
+        if (reviews != null && !reviews.isEmpty()) {
+            double totalScore = 0.0;
+            for (Review review : reviews) {
+                totalScore += review.getScore();
+            }
+            this.score = totalScore / reviews.size();
+        }
+        else {
+            this.score = 0.0;
+        }
+    }
 }

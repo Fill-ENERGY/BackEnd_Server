@@ -74,4 +74,19 @@ public class ReviewResponseDTO {
         private List<String> images;
     }
 
+    @Getter
+    @Builder
+    public static class ReviewRecommendDTO {
+        private Long reviewId;
+        private Long memberId;
+        private int recommendCount;
+
+        public static ReviewRecommendDTO from(Review review, Long memberId) {
+            return ReviewRecommendDTO.builder()
+                    .reviewId(review.getId())
+                    .memberId(memberId)
+                    .recommendCount(review.getRecommendationNum())
+                    .build();
+        }
+    }
 }
