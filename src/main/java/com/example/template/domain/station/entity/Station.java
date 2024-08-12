@@ -1,9 +1,11 @@
 package com.example.template.domain.station.entity;
 
+import com.example.template.domain.review.entity.Review;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalTime;
+import java.util.List;
 
 @Builder
 @Getter
@@ -62,6 +64,9 @@ public class Station {
 
     @Column(name = "institution_phone")
     private String institutionPhone;  // 관리기관 전화번호
+
+    @OneToMany(mappedBy = "station", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Review> reviews;
 
     public void update(Station station) {
         this.name = station.getName();
