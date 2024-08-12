@@ -69,6 +69,19 @@ public class MemberServiceImpl implements MemberService{
     }
 
     @Override
+    public MemberResponseDTO.SignupResultDTO socialSignup(MemberRequestDTO.SignupDTO signupDTO) {
+        if (memberRepository
+                .findByEmailAndProvider(signupDTO.getEmail(), signupDTO.getProvider())
+                .isPresent()
+        ) throw new MemberException(MemberErrorCode.USER_ALREADY_EXIST);
+        Member member = memberRepository.save(signupDTO.toEntity());
+
+        member.setMemberNickname(member.getNickname());
+
+        return MemberResponseDTO.SignupResultDTO.from(member);
+    }
+
+    @Override
     public void logout(HttpServletRequest request) {
         try {
             String accessToken = jwtProvider.resolveAccessToken(request);
