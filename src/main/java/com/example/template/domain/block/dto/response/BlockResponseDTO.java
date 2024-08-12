@@ -19,7 +19,7 @@ public class BlockResponseDTO {
         Long memberId;  // 멤버 아이디
         Long targetMemberId;    // 차단 대상 멤버 아이디
         String name;    // 차단 대상 멤버 이름
-        String email;   // 차단 대상 멤버 이메일
+        String nickname;   // 차단 대상 멤버 닉네임
         String profileImg;  // 차단 대상 멤버 프로필 이미지
 
         public static BlockDTO from(Block block) {
@@ -28,7 +28,7 @@ public class BlockResponseDTO {
                     .memberId(block.getMember().getId())
                     .targetMemberId(block.getTargetMember().getId())
                     .name(block.getTargetMember().getName())
-                    .email(block.getTargetMember().getEmail())
+                    .nickname(block.getTargetMember().getNickname())
                     .profileImg(block.getTargetMember().getProfileImg())
                     .build();
         }
