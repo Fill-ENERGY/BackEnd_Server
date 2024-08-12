@@ -95,7 +95,7 @@ public class MessageResponseDTO {
     public static class ThreadDetailListDTO {
         private Long threadId;
         private String name;
-        private String email;
+        private String nickname;
         private String profileImg;
         private RecentMessage recentMessage;
         private int unreadMessageCount;
@@ -106,7 +106,7 @@ public class MessageResponseDTO {
             return ThreadDetailListDTO.builder()
                     .threadId(participant.getMessageThread().getId())
                     .name(otherMember.getName())
-                    .email(otherMember.getEmail())
+                    .nickname(otherMember.getNickname())
                     .profileImg(otherMember.getProfileImg())
                     .recentMessage(recentMessage)
                     .unreadMessageCount(unreadMessageCount)
@@ -161,7 +161,7 @@ public class MessageResponseDTO {
     public static class MessageListDTO {
         private Long threadId;
         private String name;
-        private String email;
+        private String nickname;
         private String profileImg;
         private List<MessageDTO> messages;
         private Long nextCursor;
@@ -175,7 +175,7 @@ public class MessageResponseDTO {
             return MessageListDTO.builder()
                     .threadId(thread.getId())
                     .name(otherParticipant.getName())
-                    .email(otherParticipant.getEmail())
+                    .nickname(otherParticipant.getNickname())
                     .profileImg(otherParticipant.getProfileImg())
                     .messages(messageDTOs)
                     .nextCursor(nextCursor)
