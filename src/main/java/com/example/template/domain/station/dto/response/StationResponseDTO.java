@@ -7,12 +7,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.Locale;
+import java.util.logging.SimpleFormatter;
 
 public class StationResponseDTO {
 
@@ -28,7 +30,6 @@ public class StationResponseDTO {
         private int scoreCount;
         private double latitude;
         private double longitude;
-        // TODO: 평일 주말 구분 논의해보기
         private String dayOfWeek;
         private String openTime;
         private String closeTime;
@@ -60,8 +61,8 @@ public class StationResponseDTO {
                     .scoreCount(station.getReviews().size())
                     .latitude(station.getLatitude())
                     .longitude(station.getLongitude())
-                    .openTime(openTime.format(DateTimeFormatter.ISO_DATE_TIME))
-                    .closeTime(closeTime.format(DateTimeFormatter.ISO_DATE_TIME))
+                    .openTime(convertLocalTimeToString(openTime))
+                    .closeTime(convertLocalTimeToString(closeTime))
                     .build();
         }
     }
@@ -101,12 +102,12 @@ public class StationResponseDTO {
         private boolean isFavorite;
         private String address;
         private String streetNumber;
-        private LocalTime weekdayOpen;
-        private LocalTime weekdayClose;
-        private LocalTime saturdayOpen;
-        private LocalTime saturdayClose;
-        private LocalTime holidayOpen;
-        private LocalTime holidayClose;
+        private String weekdayOpen;
+        private String weekdayClose;
+        private String saturdayOpen;
+        private String saturdayClose;
+        private String holidayOpen;
+        private String holidayClose;
         private String phoneNumber;
         private int concurrentUsageCount;
         private boolean airInjectionAvailable;
@@ -124,17 +125,21 @@ public class StationResponseDTO {
                     .isFavorite(isFavorite)
                     .address(station.getAddress())
                     .streetNumber(station.getStreetNumber())
-                    .weekdayOpen(station.getWeekdayOpen())
-                    .weekdayClose(station.getWeekdayClose())
-                    .saturdayOpen(station.getSaturdayOpen())
-                    .saturdayClose(station.getSaturdayClose())
-                    .holidayOpen(station.getHolidayOpen())
-                    .holidayClose(station.getHolidayClose())
+                    .weekdayOpen(convertLocalTimeToString(station.getWeekdayOpen()))
+                    .weekdayClose(convertLocalTimeToString(station.getWeekdayClose()))
+                    .saturdayOpen(convertLocalTimeToString(station.getSaturdayOpen()))
+                    .saturdayClose(convertLocalTimeToString(station.getSaturdayClose()))
+                    .holidayOpen(convertLocalTimeToString(station.getHolidayOpen()))
+                    .holidayClose(convertLocalTimeToString(station.getHolidayClose()))
                     .phoneNumber(station.getInstitutionPhone())
                     .concurrentUsageCount(station.getConcurrentUsageCount())
                     .airInjectionAvailable(station.isAirInjectionAvailable())
                     .phoneChargingAvailable(station.isPhoneChargingAvailable())
                     .build();
         }
+    }
+
+    private static String convertLocalTimeToString(LocalTime localTime) {
+        return DateTimeFormatter.ofPattern("HH:mm").format(localTime);
     }
 }
