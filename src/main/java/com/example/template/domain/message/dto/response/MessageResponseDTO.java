@@ -16,6 +16,12 @@ import java.util.stream.Collectors;
 
 public class MessageResponseDTO {
 
+    @Getter
+    @Builder
+    public static class MessageImgDTO {
+        private List<String> images;
+    }
+
     @Builder
     @Getter
     @NoArgsConstructor
@@ -86,23 +92,46 @@ public class MessageResponseDTO {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ThreadListDTO {
+    public static class ThreadDetailListDTO {
         private Long threadId;
         private String name;
-        private String email;
+        private String nickname;
         private String profileImg;
         private RecentMessage recentMessage;
         private int unreadMessageCount;
+        private LocalDateTime updatedAt;
 
-        public static ThreadListDTO of(MessageParticipant participant, RecentMessage recentMessage,
-                                       int unreadMessageCount, Member otherMember) {
-            return ThreadListDTO.builder()
+        public static ThreadDetailListDTO of(MessageParticipant participant, RecentMessage recentMessage,
+                                             int unreadMessageCount, Member otherMember) {
+            return ThreadDetailListDTO.builder()
                     .threadId(participant.getMessageThread().getId())
                     .name(otherMember.getName())
-                    .email(otherMember.getEmail())
+                    .nickname(otherMember.getNickname())
                     .profileImg(otherMember.getProfileImg())
                     .recentMessage(recentMessage)
                     .unreadMessageCount(unreadMessageCount)
+                    .updatedAt(participant.getMessageThread().getUpdatedAt())
+                    .build();
+        }
+    }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ThreadListDTO {
+        private List<ThreadDetailListDTO> threads;
+        private LocalDateTime cursor;
+        private Long lastId;
+        private boolean hasNext;
+
+        public static ThreadListDTO of(List<ThreadDetailListDTO> threadDetailListDTOS,
+                                             LocalDateTime cursor, Long lastId, boolean hasNext) {
+            return ThreadListDTO.builder()
+                    .threads(threadDetailListDTOS)
+                    .cursor(cursor)
+                    .lastId(lastId)
+                    .hasNext(hasNext)
                     .build();
         }
     }
@@ -132,11 +161,13 @@ public class MessageResponseDTO {
     public static class MessageListDTO {
         private Long threadId;
         private String name;
-        private String email;
+        private String nickname;
         private String profileImg;
         private List<MessageDTO> messages;
+        private Long nextCursor;
+        private boolean hasNext;
 
-        public static MessageListDTO from(MessageThread thread, Member otherParticipant, List<Message> messages) {
+        public static MessageListDTO from(MessageThread thread, Member otherParticipant, List<Message> messages, Long nextCursor, boolean hasNext) {
             List<MessageDTO> messageDTOs = messages.stream()
                     .map(MessageDTO::from)
                     .collect(Collectors.toList());
@@ -144,9 +175,11 @@ public class MessageResponseDTO {
             return MessageListDTO.builder()
                     .threadId(thread.getId())
                     .name(otherParticipant.getName())
-                    .email(otherParticipant.getEmail())
+                    .nickname(otherParticipant.getNickname())
                     .profileImg(otherParticipant.getProfileImg())
                     .messages(messageDTOs)
+                    .nextCursor(nextCursor)
+                    .hasNext(hasNext)
                     .build();
         }
     }

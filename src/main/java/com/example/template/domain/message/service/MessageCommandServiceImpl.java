@@ -1,5 +1,6 @@
 package com.example.template.domain.message.service;
 
+import com.example.template.domain.block.repository.BlockRepository;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.domain.message.dto.request.MessageRequestDTO;
@@ -16,12 +17,12 @@ import com.example.template.domain.message.repository.MessageThreadRepository;
 import com.example.template.global.config.aws.S3Manager;
 import com.example.template.global.util.s3.entity.Uuid;
 import com.example.template.global.util.s3.repository.UuidRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -37,26 +38,79 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     private final MessageThreadRepository messageThreadRepository;
     private final MessageParticipantRepository messageParticipantRepository;
     private final MessageImgRepository messageImgRepository;
+    private final BlockRepository blockRepository;
     private final UuidRepository uuidRepository;
     private final S3Manager s3Manager;
 
     @Override
-    public MessageResponseDTO.MessageDTO createMessage(List<MultipartFile> files, MessageRequestDTO.CreateMessageDTO requestDTO) {
-        // TODO 현재 로그인한 멤버 정보 받아오기, 멤버 관련 예외 처리로 변경하기
-        Member sender = memberRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+    public MessageResponseDTO.MessageImgDTO createImageMessage(List<MultipartFile> images, Member member) {
+        List<String> keyNames = new ArrayList<>();
+        List<Uuid> uuids = new ArrayList<>();
+
+        // UUID 생성 및 키 이름 생성
+        for (MultipartFile image : images) {
+            if (image != null && !image.isEmpty()) {
+                String uuid = UUID.randomUUID().toString();
+                Uuid savedUuid = Uuid.builder().uuid(uuid).build();
+                uuids.add(savedUuid);
+                keyNames.add(s3Manager.generateMessageKeyName(savedUuid));
+            }
+        }
+
+        // UUID 일괄 저장
+        uuidRepository.saveAll(uuids);
+
+        // S3에 파일 일괄 업로드
+        List<String> imageUrls = s3Manager.uploadFiles(keyNames, images);
+
+        // MessageImg 엔티티 생성 및 저장 (Message와 연결하지 않음)
+        List<MessageImg> messageImg = imageUrls.stream()
+                .map(url -> MessageImg.builder().imgUrl(url).build())
+                .toList();
+        messageImgRepository.saveAll(messageImg);
+
+        // MessageImgDTO 생성 및 반환
+        return MessageResponseDTO.MessageImgDTO.builder()
+                .images(imageUrls)
+                .build();
+    }
+
+    @Override
+    public MessageResponseDTO.MessageDTO createMessage(MessageRequestDTO.CreateMessageDTO requestDTO, Member sender) {
         Member receiver = memberRepository.findById(requestDTO.getReceiverId())
-                .orElseThrow(() -> new EntityNotFoundException("Receiver not found"));
+                .orElseThrow(() -> new MessageException(MessageErrorCode.OTHER_PARTICIPANT_NOT_FOUND));
+
+        // 자기 자신에게 쪽지를 보내는 경우
+        if(sender.equals(receiver)) {
+            throw new MessageException(MessageErrorCode.SELF_MESSAGE_NOT_ALLOWED);
+        }
+
+        // 차단된 멤버에게 쪽지를 보내는 경우
+        boolean isBlockedMember = blockRepository.existsByMemberAndTargetMember(sender, receiver);
+        if (isBlockedMember) {
+            throw new MessageException(MessageErrorCode.BLOCKED_MEMBER_NOT_ALLOWED);
+        }
 
         // 채팅방 조회 또는 생성
         MessageThread messageThread = getOrCreateMessageThread(requestDTO.getThreadId(), sender, receiver);
-        
+
         // 쪽지 생성
         Message message = requestDTO.toEntity(sender, receiver,messageThread);
-        Message savedMessage = messageRepository.save(message);
 
-        // S3에 이미지 업로드
-        uploadMessageImages(files, savedMessage);
+        // 이미지 처리
+        if (requestDTO.getImages() != null && !requestDTO.getImages().isEmpty()) {
+            List<MessageImg> messageImgs = messageImgRepository.findAllByImgUrlIn(requestDTO.getImages());
+
+            // S3에 등록되지 않은 이미지를 가지고 접근
+            if (messageImgs.size() != requestDTO.getImages().size()) {
+                throw new MessageException(MessageErrorCode.INVALID_IMAGE_URLS);
+            }
+
+            messageImgs.forEach(img -> img.setMessage(message));
+            messageImgRepository.saveAll(messageImgs);
+        }
+
+        Message savedMessage = messageRepository.save(message);
 
         return MessageResponseDTO.MessageDTO.from(savedMessage);
     }
@@ -69,6 +123,9 @@ public class MessageCommandServiceImpl implements MessageCommandService {
             // 쪽지 전송자 또는 수신자가 채팅방을 나간 경우, 참여 상태를 다시 ACTIVE로 업데이트
             updateParticipantStatusToActive(messageThread, sender);
             updateParticipantStatusToActive(messageThread, receiver);
+
+            // 채팅방의 updatedAt 갱신
+            messageThread.setUpdatedAt(LocalDateTime.now());
 
             return messageThread;
         } else {    // 채팅방이 존재하지 않는 경우(첫 쪽지)
@@ -103,44 +160,8 @@ public class MessageCommandServiceImpl implements MessageCommandService {
         messageParticipantRepository.save(messageParticipant);
     }
 
-    private void uploadMessageImages(List<MultipartFile> files, Message message) {
-        if (files != null && !files.isEmpty()) {
-            // UUID 생성 및 저장
-            List<Uuid> savedUuids = new ArrayList<>();
-            for (MultipartFile file : files) {
-                if (file != null && !file.isEmpty()) {
-                    String uuid = UUID.randomUUID().toString();
-                    Uuid savedUuid = uuidRepository.save(Uuid.builder().uuid(uuid).build());
-                    savedUuids.add(savedUuid);
-                }
-            }
-
-            // S3 키 이름 생성
-            List<String> keyNames = savedUuids.stream()
-                    .map(s3Manager::generateMessageKeyName)
-                    .collect(Collectors.toList());
-
-            // 파일 업로드 및 URL 반환
-            List<String> imgUrls = s3Manager.uploadFiles(keyNames, files);
-
-            for (String imgUrl : imgUrls) {
-                MessageImg messageImg = MessageImg.builder()
-                        .imgUrl(imgUrl)
-                        .message(message)
-                        .build();
-                messageImgRepository.save(messageImg);
-                message.getImages().add(messageImg);
-            }
-
-            messageRepository.save(message);
-        }
-    }
-
     @Override
-    public MessageResponseDTO.MessageDeleteDTO softDeleteMessage(Long messageId) {
-        // TODO 현재 로그인한 멤버 정보 받아오기
-        Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+    public MessageResponseDTO.MessageDeleteDTO softDeleteMessage(Long messageId, Member member) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.MESSAGE_NOT_FOUND));
 
@@ -158,10 +179,7 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     }
 
     @Override
-    public MessageResponseDTO.ThreadDeleteDTO softDeleteThread(Long threadId) {
-        // TODO 현재 로그인한 멤버 정보 받아오기
-        Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+    public MessageResponseDTO.ThreadDeleteDTO softDeleteThread(Long threadId, Member member) {
         MessageThread messageThread = messageThreadRepository.findById(threadId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
         MessageParticipant participant = messageParticipantRepository.findByMemberAndMessageThread(member, messageThread)
@@ -184,21 +202,31 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     }
 
     @Override
-    public MessageResponseDTO.MessageListDTO updateMessageList(Long threadId) {
-        // TODO 현재 로그인한 멤버 정보 받아오기
-        Member member = memberRepository.findById(1L)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found"));
+    public MessageResponseDTO.MessageListDTO updateMessageList(Long threadId, Long cursor, Integer limit, Member member) {
+        // 첫 페이지 로딩 시 매우 큰 ID 값 사용
+        if (cursor == 0) {
+            cursor = Long.MAX_VALUE;
+        }
+
         MessageThread messageThread = messageThreadRepository.findById(threadId)
                 .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
 
         // 쪽지 상대 찾기
         Member otherParticipant = getOtherParticipant(messageThread, member);
 
-        // 쪽지 목록 조회
-        List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberOrderByCreatedAtDesc(messageThread, member);
+        // 채팅방 참여 상태 조회
+        MessageParticipant messageParticipant = messageParticipantRepository.findByMemberAndMessageThread(member, messageThread)
+                .orElseThrow(() -> new MessageException(MessageErrorCode.PARTICIPANT_NOT_FOUND));
+
+        // leftAt 이후의 쪽지만 조회
+        List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberAndLeftAtAfterWithCursor(
+                cursor, limit, messageThread, member, messageParticipant.getLeftAt());
+
+        Long nextCursor = messages.isEmpty() ? null : messages.get(messages.size() - 1).getId();
+        boolean hasNext = messages.size() == limit;
 
         // 읽음 상태 업데이트 전 dto 생성(안읽은 쪽지 색상 표시하기 위함)
-        MessageResponseDTO.MessageListDTO messageListDTO = MessageResponseDTO.MessageListDTO.from(messageThread, otherParticipant, messages);
+        MessageResponseDTO.MessageListDTO messageListDTO = MessageResponseDTO.MessageListDTO.from(messageThread, otherParticipant, messages, nextCursor, hasNext);
 
         // 읽지 않은 쪽지 상태 업데이트
         List<Message> unreadMessages = messages.stream()
