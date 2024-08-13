@@ -26,7 +26,7 @@ public class BoardRequestDTO {
         @NotNull(message = "카테고리는 필수입니다.")
         private Category category;
 
-        private List<String> images; // 엔티티에 없는 필드, 별도 처리 필요
+        private List<String> images;
 
         public Board toEntity(Member member) {
             HelpStatus helpStatus = this.category == Category.HELP ? HelpStatus.REQUESTED : HelpStatus.NONE;
