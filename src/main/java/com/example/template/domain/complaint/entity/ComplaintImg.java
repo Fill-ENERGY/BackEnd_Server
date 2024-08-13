@@ -22,4 +22,8 @@ public class ComplaintImg {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "complaint_id")
     private Complaint complaint;
+
+    public void updateComplaint(Complaint complaint) {
+        this.complaint = complaint;
+    }
 }

@@ -36,4 +36,5 @@ public class Complaint extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "station_id")
     private Station station;
+
 }
