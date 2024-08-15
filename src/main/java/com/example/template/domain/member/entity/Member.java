@@ -31,8 +31,9 @@ public class Member extends BaseEntity {
     @Column(name = "member_password")
     private String password;    // 비밀번호
 
-    @Column(length = 100) // provider 추가 (kakao)
-    private String provider;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "member_provider", length = 100) // provider 추가 (kakao)
+    private ProviderType provider;
 
     @Column(name = "member_role")
     private String role;    // 역할

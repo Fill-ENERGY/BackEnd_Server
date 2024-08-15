@@ -2,6 +2,7 @@ package com.example.template.domain.member.service;
 
 import com.example.template.domain.member.dto.*;
 import com.example.template.domain.member.entity.Member;
+import com.example.template.domain.member.entity.ProviderType;
 import com.example.template.domain.member.exception.MemberErrorCode;
 import com.example.template.domain.member.exception.MemberException;
 import com.example.template.domain.member.jwt.userdetails.PrincipalDetails;
@@ -113,7 +114,7 @@ public class KakaoServiceImpl implements KakaoService{
             throw new MemberException(MemberErrorCode.EMAIL_NOT_EXIST);
         }
 
-        return memberRepository.findByEmailAndProvider(kakaoEmail, "kakao")
+        return memberRepository.findByEmailAndProvider(kakaoEmail, ProviderType.KAKAO)
                 .map(member -> {
                     // 로그인 로직
                     PrincipalDetails userDetails = new PrincipalDetails(member);
@@ -132,13 +133,13 @@ public class KakaoServiceImpl implements KakaoService{
                     MemberRequestDTO.SignupDTO signupRequestDto = MemberRequestDTO.SignupDTO.builder()
                             .email(kakaoEmail)
                             .name(kakaoProfile.getProperties().getNickname())
-                            .provider("kakao")
+                            .provider(ProviderType.KAKAO)
                             .build();
 
                     memberService.socialSignup(signupRequestDto);
 
                     // 로그인 로직 (회원가입 후 바로 로그인 처리)
-                    Member member = memberRepository.findByEmailAndProvider(kakaoEmail, "kakao")
+                    Member member = memberRepository.findByEmailAndProvider(kakaoEmail, ProviderType.KAKAO)
                             .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
 
                     PrincipalDetails userDetails = new PrincipalDetails(member);

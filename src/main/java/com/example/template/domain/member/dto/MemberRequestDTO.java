@@ -1,6 +1,7 @@
 package com.example.template.domain.member.dto;
 
 import com.example.template.domain.member.entity.Member;
+import com.example.template.domain.member.entity.ProviderType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -46,7 +47,7 @@ public class MemberRequestDTO {
         @Schema(description = "passwordCheck", example = "test1234!!")
         private String passwordCheck;
 
-        private String provider;
+        private ProviderType provider;
 
         public Member toEntity(String encodedPw){
             return Member.builder()
