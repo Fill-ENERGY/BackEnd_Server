@@ -12,7 +12,5 @@ public interface KakaoService {
 
     void kakaoUnlink(String accessToken);
 
-    MemberResponseDTO.SignupResultDTO signupByKakao(SocialRequestDTO.SignupDTO requestDto);
-
-    MemberResponseDTO.LoginResultDTO loginByKakao(SocialRequestDTO.LoginDTO requestDto);
+    MemberResponseDTO.LoginResultDTO loginOrSignupByKakao(SocialRequestDTO.LoginDTO requestDTO);
 }

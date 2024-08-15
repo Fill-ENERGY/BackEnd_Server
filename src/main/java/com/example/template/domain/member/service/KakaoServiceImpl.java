@@ -102,44 +102,56 @@ public class KakaoServiceImpl implements KakaoService{
     }
 
     @Override
-    public MemberResponseDTO.SignupResultDTO signupByKakao(SocialRequestDTO.SignupDTO requestDTO) {
-        KakaoProfile  kakaoProfile = getKakaoProfile(requestDTO.getAccessToken());
-        if (kakaoProfile == null) throw new MemberException(MemberErrorCode.MEMBER_NOT_FOUND);
-        if (kakaoProfile.getKakao_account().getEmail() == null) {
+    public MemberResponseDTO.LoginResultDTO loginOrSignupByKakao(SocialRequestDTO.LoginDTO requestDTO) {
+        KakaoProfile kakaoProfile = getKakaoProfile(requestDTO.getAccessToken());
+        if (kakaoProfile == null) {
+            throw new MemberException(MemberErrorCode.MEMBER_NOT_FOUND);
+        }
+
+        String kakaoEmail = kakaoProfile.getKakao_account().getEmail();
+        if (kakaoEmail == null) {
             kakaoUnlink(requestDTO.getAccessToken());
             throw new MemberException(MemberErrorCode.EMAIL_NOT_EXIST);
         }
 
-        MemberRequestDTO.SignupDTO signupRequestDto = MemberRequestDTO.SignupDTO.builder()
-                .email(kakaoProfile.getKakao_account().getEmail())
-                .name(kakaoProfile.getProperties().getNickname())
-                .provider("kakao")
-                .build();
+        return memberRepository.findByEmailAndProvider(kakaoEmail, "kakao")
+                .map(member -> {
+                    // 로그인 로직
+                    PrincipalDetails userDetails = new PrincipalDetails(member);
+                    String accessToken = jwtProvider.createJwtAccessToken(userDetails);
+                    String refreshToken = jwtProvider.createJwtRefreshToken(userDetails);
 
-        return memberService.socialSignup(signupRequestDto);
-    }
+                    return MemberResponseDTO.LoginResultDTO.builder()
+                            .userId(member.getId())
+                            .createdAt(LocalDateTime.now())
+                            .accessToken(accessToken)
+                            .refreshToken(refreshToken)
+                            .build();
+                })
+                .orElseGet(() -> {
+                    // 회원가입 로직
+                    MemberRequestDTO.SignupDTO signupRequestDto = MemberRequestDTO.SignupDTO.builder()
+                            .email(kakaoEmail)
+                            .name(kakaoProfile.getProperties().getNickname())
+                            .provider("kakao")
+                            .build();
 
-    @Override
-    public MemberResponseDTO.LoginResultDTO loginByKakao(SocialRequestDTO.LoginDTO requestDTO) {
-        KakaoProfile kakaoProfile = getKakaoProfile(requestDTO.getAccessToken());
-        if (kakaoProfile == null) throw new MemberException(MemberErrorCode.MEMBER_NOT_FOUND);
+                    memberService.socialSignup(signupRequestDto);
 
-        String kakaoEmail = kakaoProfile.getKakao_account().getEmail();
-        if (kakaoEmail == null) throw new MemberException(MemberErrorCode.EMAIL_NOT_EXIST);
+                    // 로그인 로직 (회원가입 후 바로 로그인 처리)
+                    Member member = memberRepository.findByEmailAndProvider(kakaoEmail, "kakao")
+                            .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
 
-        Member member = memberRepository.findByEmailAndProvider(kakaoEmail, "kakao")
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+                    PrincipalDetails userDetails = new PrincipalDetails(member);
+                    String accessToken = jwtProvider.createJwtAccessToken(userDetails);
+                    String refreshToken = jwtProvider.createJwtRefreshToken(userDetails);
 
-        PrincipalDetails userDetails = new PrincipalDetails(member);
-
-        String accessToken = jwtProvider.createJwtAccessToken(userDetails);
-        String refreshToken = jwtProvider.createJwtRefreshToken(userDetails);
-
-        return MemberResponseDTO.LoginResultDTO.builder()
-                .userId(member.getId())
-                .createdAt(LocalDateTime.now())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
+                    return MemberResponseDTO.LoginResultDTO.builder()
+                            .userId(member.getId())
+                            .createdAt(LocalDateTime.now())
+                            .accessToken(accessToken)
+                            .refreshToken(refreshToken)
+                            .build();
+                });
     }
 }
