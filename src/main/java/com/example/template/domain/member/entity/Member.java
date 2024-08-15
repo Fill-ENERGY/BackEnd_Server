@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Builder
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -43,6 +45,18 @@ public class Member extends BaseEntity {
 
     @Column(name = "is_reported")
     private boolean isReported; // 신고 상태
+
+    @Column(name = "member_birth")
+    private LocalDate birth; //생일
+
+    @Column(name = "member_gender")
+    private GenderType gender; //성별
+
+    @Column(name = "member_phone", length = 16)
+    private String phone;
+
+    @Column(name = "member_type")
+    private MemberType memberType;
 
     public void updateProfile(ProfileRequestDTO.UpdateProfileDTO updateProfileDTO, String imageUrl) {
         this.nickname = updateProfileDTO.getNickname();
