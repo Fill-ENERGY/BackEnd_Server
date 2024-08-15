@@ -2,9 +2,9 @@ package com.example.template.domain.board.dto.response;
 
 import com.example.template.domain.board.entity.Board;
 import com.example.template.domain.board.entity.BoardImg;
-import com.example.template.domain.board.entity.Comment;
 import com.example.template.domain.board.entity.enums.Category;
 import com.example.template.domain.board.entity.enums.HelpStatus;
+import com.example.template.domain.member.entity.Member;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -20,7 +20,7 @@ public class BoardResponseDTO {
     }
 
 
-        @Getter
+    @Getter
     @Builder
     public static class BoardDTO {
         private Long id;
@@ -80,12 +80,10 @@ public class BoardResponseDTO {
     @Builder
     public static class BoardDetailDTO {
         private BoardDTO board;
-        private List<CommentResponseDTO.CommentDTO> comments;
 
-        public static BoardDetailDTO of(Board board, List<Comment> comments, Long currentMemberId) {
+        public static BoardDetailDTO of(Board board, Member currentMember) {
             return BoardDetailDTO.builder()
-                    .board(BoardDTO.from(board, currentMemberId))
-                    .comments(comments.stream().map(CommentResponseDTO.CommentDTO::from).toList())
+                    .board(BoardDTO.from(board, currentMember.getId()))
                     .build();
         }
     }

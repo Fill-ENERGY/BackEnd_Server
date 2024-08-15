@@ -1,10 +1,12 @@
 package com.example.template.domain.member.dto;
 
 import com.example.template.domain.member.entity.Member;
+import com.example.template.domain.member.entity.ProviderType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Getter;
 
 public class MemberRequestDTO {
@@ -23,6 +25,7 @@ public class MemberRequestDTO {
     }
 
     @Getter
+    @Builder
     public static class SignupDTO {
         @Size(max = 10, message = "이름은 최대 10자까지 입력 가능합니다.")
         @Schema(description = "name", example = "힘전소")
@@ -44,11 +47,21 @@ public class MemberRequestDTO {
         @Schema(description = "passwordCheck", example = "test1234!!")
         private String passwordCheck;
 
+        private ProviderType provider;
+
         public Member toEntity(String encodedPw){
             return Member.builder()
                     .email(email)
                     .password(encodedPw)
                     .name(name)
+                    .build();
+        }
+
+        public Member toEntity() {
+            return Member.builder()
+                    .email(email)
+                    .name(name)
+                    .provider(provider)
                     .build();
         }
     }

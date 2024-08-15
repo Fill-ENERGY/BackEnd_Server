@@ -37,11 +37,11 @@ public class Board extends BaseEntity {
     @Column(name = "help_status", nullable = false)
     private HelpStatus helpStatus; // 도움 상태
 
-    @Column(name = "like_num")
-    private Integer likeNum;       // 좋아요 수
+    @Column(name = "like_num", nullable = false)
+    private Integer likeNum = 0;       // 좋아요 수
 
-    @Column(name = "comment_count")
-    private Integer commentCount;  // 댓글 수
+    @Column(name = "comment_count", nullable = false)
+    private Integer commentCount = 0;  // 댓글 수
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
@@ -61,13 +61,27 @@ public class Board extends BaseEntity {
     }
 
     public void incrementLikeCount() {
-        this.likeNum = (this.likeNum == null) ? 1 : this.likeNum + 1;
+        this.likeNum++;
     }
 
     public void decrementLikeCount() {
-        if (this.likeNum != null && this.likeNum > 0) {
+        if (this.likeNum > 0) {
             this.likeNum--;
         }
+    }
+
+    public void incrementCommentCount() {
+        this.commentCount++;
+    }
+
+    public void decrementCommentCount() {
+        if (this.commentCount > 0) {
+            this.commentCount--;
+        }
+    }
+
+    public void setCommentCount(int count) {
+        this.commentCount = Math.max(0, count);
     }
 
     public void updateHelpStatus(HelpStatus helpStatus) {

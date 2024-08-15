@@ -24,11 +24,11 @@ public class Comment extends BaseEntity {
     @Column(nullable = false)
     private String content; // 내용
 
-    @Column(name = "is_secret", nullable = false)
-    private boolean isSecret;  // 비밀 여부
+    @Column(name = "secret", nullable = false)
+    private boolean secret;  // 비밀 댓글 여부
 
-    // is_author 필드 제거
-    // TODO : "글쓴이"와 같은 유저인지는 동적인 정보이므로, 계산 로직으로 처리
+    @Column(nullable = false)
+    private boolean deleted; // 대댓글이 존재할 경우 임시 삭제 처리
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
@@ -55,7 +55,7 @@ public class Comment extends BaseEntity {
     }
 
     public void setSecret(boolean secret) {
-        isSecret = secret;
+        this.secret = secret;
     }
 
     // 연관관계 편의 메서드들
@@ -77,18 +77,16 @@ public class Comment extends BaseEntity {
         child.setParent(this);
     }
 
-    public void removeChild(Comment child) {
-        this.children.remove(child);
-        child.setParent(null);
+    public void markAsDeleted() {
+        this.deleted = true;
+        this.content = "댓글이 삭제되었습니다.";
     }
 
-    public void addCommentImg(CommentImg commentImg) {
-        this.images.add(commentImg);
-        commentImg.setComment(this);
+    public boolean hasChildren() {
+        return this.children.stream().anyMatch(child -> !child.isDeleted());
     }
 
-    public void removeCommentImg(CommentImg commentImg) {
-        this.images.remove(commentImg);
-        commentImg.setComment(null);
+    public boolean isTopLevelComment() {
+        return this.parent == null;
     }
 }

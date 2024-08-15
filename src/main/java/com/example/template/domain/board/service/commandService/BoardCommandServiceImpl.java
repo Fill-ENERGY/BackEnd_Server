@@ -12,10 +12,7 @@ import com.example.template.domain.board.repository.BoardImgRepository;
 import com.example.template.domain.board.repository.BoardLikeRepository;
 import com.example.template.domain.board.repository.BoardRepository;
 import com.example.template.domain.member.entity.Member;
-import com.example.template.domain.member.repository.MemberRepository;
 import com.example.template.global.config.aws.S3Manager;
-import com.example.template.global.util.s3.entity.Uuid;
-import com.example.template.global.util.s3.repository.UuidRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,27 +32,19 @@ public class BoardCommandServiceImpl implements BoardCommandService {
     private final BoardRepository boardRepository;
     private final BoardLikeRepository boardLikeRepository;
     private final BoardImgRepository boardImgRepository;
-    private final MemberRepository memberRepository;
-    private final UuidRepository uuidRepository;
     private final S3Manager s3Manager;
 
     @Override
-    public BoardResponseDTO.BoardImgDTO uploadImages(List<MultipartFile> images) {
+    public BoardResponseDTO.BoardImgDTO uploadBoardImages(List<MultipartFile> images) {
         List<String> keyNames = new ArrayList<>();
-        List<Uuid> uuids = new ArrayList<>();
 
-        // UUID 생성 및 키 이름 생성
+        // 키 이름 생성
         for (MultipartFile image : images) {
             if (image != null && !image.isEmpty()) {
-                String uuid = UUID.randomUUID().toString();
-                Uuid savedUuid = Uuid.builder().uuid(uuid).build();
-                uuids.add(savedUuid);
-                keyNames.add(s3Manager.generateBoardKeyName(savedUuid));
+                UUID uuid = UUID.randomUUID();
+                keyNames.add(s3Manager.generateBoardKeyName(uuid));
             }
         }
-
-        // UUID 일괄 저장
-        uuidRepository.saveAll(uuids);
 
         // S3에 파일 일괄 업로드
         List<String> imageUrls = s3Manager.uploadFiles(keyNames, images);
@@ -73,8 +62,7 @@ public class BoardCommandServiceImpl implements BoardCommandService {
     }
 
     @Override
-    public BoardResponseDTO.BoardDTO createBoard(BoardRequestDTO.CreateBoardDTO createBoardDTO) {
-        Member member = getMockMember();
+    public BoardResponseDTO.BoardDTO createBoard(BoardRequestDTO.CreateBoardDTO createBoardDTO, Member member) {
         Board board = createBoardDTO.toEntity(member);
 
         if (createBoardDTO.getImages() != null && !createBoardDTO.getImages().isEmpty()) {
@@ -94,8 +82,9 @@ public class BoardCommandServiceImpl implements BoardCommandService {
     }
 
     @Override
-    public BoardResponseDTO.BoardDTO updateBoard(Long boardId, BoardRequestDTO.UpdateBoardDTO updateBoardDTO) {
-        Member member = getMockMember();
+    public BoardResponseDTO.BoardDTO updateBoard(Long boardId,
+                                                 BoardRequestDTO.UpdateBoardDTO updateBoardDTO,
+                                                 Member member) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
         validateBoardOwnership(board, member);
@@ -149,8 +138,7 @@ public class BoardCommandServiceImpl implements BoardCommandService {
     }
 
     @Override
-    public Long deleteBoard(Long boardId) {
-        Member member = getMockMember();
+    public Long deleteBoard(Long boardId, Member member) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
         validateBoardOwnership(board, member);
@@ -158,10 +146,12 @@ public class BoardCommandServiceImpl implements BoardCommandService {
         // 연관된 이미지 처리
         List<BoardImg> images = board.getImages();
         if (!images.isEmpty()) {
-            // S3에서 이미지 파일 삭제 (옵션)
-            for (BoardImg image : images) {
-                s3Manager.deleteFile(image.getBoardImgUrl());
-            }
+            // S3에서 이미지 파일 일괄 삭제
+            List<String> imageUrls = images.stream()
+                    .map(BoardImg::getBoardImgUrl)
+                    .toList();
+            s3Manager.deleteFiles(imageUrls);
+
             // 데이터베이스에서 BoardImg 엔티티 삭제
             boardImgRepository.deleteAll(images);
         }
@@ -172,8 +162,9 @@ public class BoardCommandServiceImpl implements BoardCommandService {
     }
 
     @Override
-    public BoardResponseDTO.BoardStatusDTO updateBoardStatus(Long boardId, BoardRequestDTO.UpdateBoardStatusDTO updateBoardStatusDTO) {
-        Member member = getMockMember();
+    public BoardResponseDTO.BoardStatusDTO updateBoardStatus(Long boardId,
+                                                             BoardRequestDTO.UpdateBoardStatusDTO updateBoardStatusDTO,
+                                                             Member member) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
         if (board.getCategory() != Category.HELP) {
@@ -184,11 +175,9 @@ public class BoardCommandServiceImpl implements BoardCommandService {
         return BoardResponseDTO.BoardStatusDTO.from(board);
     }
 
-    // TODO : 나중에 트리거 적용 시 고민해야 될 로직
-    // 트리거 + 영속성 컨텍스트 생각하면 뺄지 안뺄지 고민해봐야할 듯
+    // TODO : 트리거 적용 시 하지 않은 Ver
     @Override
-    public BoardResponseDTO.BoardLikeDTO addLike(Long boardId) {
-        Member member = getMockMember();
+    public BoardResponseDTO.BoardLikeDTO addLike(Long boardId, Member member) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
 
@@ -209,8 +198,7 @@ public class BoardCommandServiceImpl implements BoardCommandService {
     }
 
     @Override
-    public BoardResponseDTO.BoardLikeDTO removeLike(Long boardId) {
-        Member member = getMockMember();
+    public BoardResponseDTO.BoardLikeDTO removeLike(Long boardId, Member member) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
 
@@ -223,12 +211,6 @@ public class BoardCommandServiceImpl implements BoardCommandService {
         boardRepository.save(board);
 
         return BoardResponseDTO.BoardLikeDTO.from(board, member.getId());
-    }
-
-    // TODO : 멤버의 임시 목데이터
-    private Member getMockMember() {
-        return memberRepository.findById(1L)
-                .orElseThrow(() -> new BoardException(BoardErrorCode.MEMBER_NOT_FOUND));
     }
 
     /*
