@@ -69,6 +69,15 @@ dependencies {
 
 	// WebFlux
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	// OAuth 2.0
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+	// Json을 결과로 매핑하기 위한 의존성
+	implementation 'com.google.code.gson:gson'
+
+	//
+	implementation 'org.springframework.boot:spring-boot-starter-freemarker:2.5.4'
 }
 
 tasks.named('test') {

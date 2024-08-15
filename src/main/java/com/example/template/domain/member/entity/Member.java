@@ -24,12 +24,16 @@ public class Member extends BaseEntity {
     @Column(name = "member_name", nullable = false)
     private String name;    // 이름
 
-    @Column(name = "member_nickname", nullable = false)
+    @Column(name = "member_nickname")
     private String nickname;    // 닉네임
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "member_password")
     private String password;    // 비밀번호
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "member_provider", length = 100) // provider 추가 (kakao)
+    private ProviderType provider;
 
     @Column(name = "member_role")
     private String role;    // 역할
@@ -43,5 +47,11 @@ public class Member extends BaseEntity {
     public void updateProfile(ProfileRequestDTO.UpdateProfileDTO updateProfileDTO, String imageUrl) {
         this.nickname = updateProfileDTO.getNickname();
         this.profileImg = imageUrl;
+    }
+
+    public void setMemberNickname(String memberNickname) {
+        this.nickname = (memberNickname != null && !memberNickname.isEmpty())
+                ? memberNickname
+                : this.email.split("@")[0];
     }
 }

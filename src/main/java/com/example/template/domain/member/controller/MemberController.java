@@ -2,9 +2,10 @@ package com.example.template.domain.member.controller;
 
 import com.example.template.domain.member.dto.MemberRequestDTO;
 import com.example.template.domain.member.dto.MemberResponseDTO;
+import com.example.template.domain.member.dto.SocialRequestDTO;
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.member.jwt.dto.JwtDTO;
-import com.example.template.domain.member.jwt.util.JwtProvider;
+import com.example.template.domain.member.service.KakaoService;
 import com.example.template.domain.member.service.MemberService;
 import com.example.template.global.annotation.AuthenticatedMember;
 import com.example.template.global.apiPayload.ApiResponse;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
 
     private final MemberService memberService;
+    private final KakaoService kakaoService;
 
     @Operation(summary = "일반 회원가입", description = "이름, 이메일, 비밀번호를 입력받아 회원가입을 진행합니다. 이메일은 중복 불가, 비밀먼호는 인코딩 되어 저장됨. 참고)")
     @PostMapping("/signup")
@@ -31,12 +33,13 @@ public class MemberController {
         return ApiResponse.onSuccess(memberService.signup(requestDTO));
     }
 
-    @Operation(summary = "일반 로그인", description = "이메일, 비밀번호를 입력받아 로그인을 진행합니다." +
-            "반환 값으로 JWT accessToken과 refreshToken이 발급됨. accessToken 값을 Authorize에 인증")
-    @PostMapping("/login")
-    public ApiResponse<MemberResponseDTO.LoginResultDTO> login(@Valid @RequestBody MemberRequestDTO.LoginDTO requestDTO) {
-        return ApiResponse.onSuccess(memberService.login(requestDTO));
+    @Operation(summary = "카카오 로그인 및 회원가입", description = "카카오 accessToken을 입력받아 로그인 또는 회원가입을 처리합니다. " +
+            "반환 값으로 JWT accessToken과 refreshToken이 발급되며, accessToken 값을 Authorize에 인증")
+    @PostMapping("/social/loginorsignup/kakao")
+    public ApiResponse<MemberResponseDTO.LoginResultDTO> loginOrSignupByKakao(@Valid @RequestBody SocialRequestDTO.LoginDTO requestDTO) {
+        return ApiResponse.onSuccess(kakaoService.loginOrSignupByKakao(requestDTO));
     }
+
 
     @Operation(summary = "로그아웃")
     @PostMapping("/logout")
@@ -58,6 +61,7 @@ public class MemberController {
                 member.getEmail(),
                 member.getName()
         );
-        return ApiResponse.onSuccess(memberDTO);}
+        return ApiResponse.onSuccess(memberDTO);
+    }
 
 }
