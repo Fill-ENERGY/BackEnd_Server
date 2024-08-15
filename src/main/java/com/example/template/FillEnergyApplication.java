@@ -16,9 +16,4 @@ public class FillEnergyApplication {
 		SpringApplication.run(FillEnergyApplication.class, args);
 	}
 
-	@Bean
-	public RestTemplate getRestTemplate() {
-		return new RestTemplate();
-	}
-
 }
