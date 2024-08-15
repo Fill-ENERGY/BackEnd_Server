@@ -3,6 +3,8 @@ package com.example.template.domain.board.scheduler;
 import com.example.template.domain.board.entity.BoardImg;
 import com.example.template.domain.board.entity.CommentImg;
 import com.example.template.domain.board.repository.BoardImgRepository;
+import com.example.template.domain.complaint.entity.ComplaintImg;
+import com.example.template.domain.complaint.repository.ComplaintImgRepository;
 import com.example.template.domain.board.repository.CommentImgRepository;
 import com.example.template.domain.message.entity.MessageImg;
 import com.example.template.domain.message.repository.MessageImgRepository;
@@ -23,6 +25,7 @@ public class UnmappedImageCleanupScheduler {
     private final BoardImgRepository boardImgRepository;
     private final CommentImgRepository commentImgRepository;
     private final MessageImgRepository messageImgRepository;
+    private final ComplaintImgRepository complaintImgRepository;
     private final S3Manager s3Manager;
 
     @Scheduled(cron = "0 0 3 * * ?") // 매일 새벽 3시에 실행
@@ -58,6 +61,21 @@ public class UnmappedImageCleanupScheduler {
 
         log.info("[cleanupUnmappedMessageImages 실행] 쪽지 이미지 삭제완료");
     }
+
+
+    @Scheduled(cron = "0 0 4 * * ?") // 매일 새벽 4시에 실행
+    @Transactional
+    public void cleanupUnmappedComplaintImages() {
+        List<ComplaintImg> unmappedImages = complaintImgRepository.findUnmappedImages();
+
+        for (ComplaintImg image : unmappedImages) {
+            s3Manager.deleteFile(image.getImgUrl());
+            complaintImgRepository.delete(image);
+        }
+
+        log.info("[cleanupUnmappedComplaintImages 실행] 민원 이미지 삭제완료");
+    }
+
 
     // TODO: 테스트용 수동 트리거 메서드 - 삭제 예정
     public void manualCleanup() {
