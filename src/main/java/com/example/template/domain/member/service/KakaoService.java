@@ -8,8 +8,6 @@ import com.example.template.domain.member.dto.SocialRequestDTO;
 public interface KakaoService {
     RetKakaoOAuth getKakaoTokenInfo(String code);
 
-    KakaoProfile getKakaoProfile(String kakaoAccessToken);
-
     void kakaoUnlink(String accessToken);
 
     MemberResponseDTO.LoginResultDTO loginOrSignupByKakao(SocialRequestDTO.LoginDTO requestDTO);

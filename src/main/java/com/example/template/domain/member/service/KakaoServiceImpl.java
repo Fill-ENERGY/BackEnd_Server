@@ -64,8 +64,7 @@ public class KakaoServiceImpl implements KakaoService{
     }
 
     //사용자 정보 조회 요청 보내기
-    @Override
-    public KakaoProfile getKakaoProfile(String kakaoAccessToken) {
+    private KakaoProfile getKakaoProfile(String kakaoAccessToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         headers.set("Authorization", "Bearer " + kakaoAccessToken);
