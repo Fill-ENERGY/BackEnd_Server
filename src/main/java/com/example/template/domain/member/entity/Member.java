@@ -60,6 +60,10 @@ public class Member extends BaseEntity {
 
     public void updateProfile(ProfileRequestDTO.UpdateProfileDTO updateProfileDTO, String imageUrl) {
         this.nickname = updateProfileDTO.getNickname();
+        this.memberType = updateProfileDTO.getMemberType();
+        this.gender = updateProfileDTO.getGender();
+        this.birth = updateProfileDTO.getBirth();
+        this.phone = updateProfileDTO.getPhone();
         this.profileImg = imageUrl;
     }
 

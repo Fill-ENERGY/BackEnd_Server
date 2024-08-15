@@ -8,4 +8,5 @@ public interface MemberQueryService {
     ProfileResponseDTO.ProfileDTO getProfile(Long memberId);
     Member getMemberByEmail(String email);
 
+   ProfileResponseDTO.MyProfileDTO getMyProfile(Member member);
 }

@@ -20,7 +20,7 @@ public class MemberCommandServiceImpl implements MemberCommandService{
 
     private final S3Manager s3Manager;
     @Override
-    public ProfileResponseDTO.ProfileDTO updateProfile(Member member, MultipartFile file, ProfileRequestDTO.UpdateProfileDTO updateProfileDTO) {
+    public ProfileResponseDTO.MyProfileDTO updateProfile(Member member, MultipartFile file, ProfileRequestDTO.UpdateProfileDTO updateProfileDTO) {
 
         s3Manager.deleteFile(member.getProfileImg());
 
@@ -31,6 +31,6 @@ public class MemberCommandServiceImpl implements MemberCommandService{
 
         member.updateProfile(updateProfileDTO, imageUrl);
 
-        return ProfileResponseDTO.from(member);
+        return ProfileResponseDTO.MyProfileDTO.from(member);
     }
 }

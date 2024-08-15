@@ -49,7 +49,7 @@ public class ReviewResponseDTO {
                     .keywords(review.getKeywords().stream().map(ReviewKeyword::getKeyword).map(KeywordDTO::from).toList())
                     .images(review.getImgList().stream().map(ReviewImg::getImgUrl).toList())
                     .score(review.getScore())
-                    .member(ProfileResponseDTO.from(review.getMember()))
+                    .member(ProfileResponseDTO.ProfileDTO.from(review.getMember()))
                     .isRecommended(isRecommended)
                     .build();
         }
