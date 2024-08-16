@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
+import java.util.List;
 import java.util.Locale;
 import java.util.logging.SimpleFormatter;
 
@@ -63,6 +64,19 @@ public class StationResponseDTO {
                     .longitude(station.getLongitude())
                     .openTime(convertLocalTimeToString(openTime))
                     .closeTime(convertLocalTimeToString(closeTime))
+                    .build();
+        }
+    }
+
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class StationPreviewListDTO {
+        private List<StationPreviewDTO> stationPreviewDTOList;
+        public static StationPreviewListDTO of(List<Station> stations, double latitude, double longitude) {
+            return StationPreviewListDTO.builder()
+                    .stationPreviewDTOList(stations.stream().map(station -> StationPreviewDTO.of(station, latitude, longitude)).toList())
                     .build();
         }
     }

@@ -34,15 +34,13 @@ public class StationController {
             @Parameter(name = "latitude", description = "현재 위치의 위도"),
             @Parameter(name = "longitude", description = "현재 위치의 경도")
     })
-    public ApiResponse<List<StationResponseDTO.StationPreviewDTO>> getStations(@RequestParam("query") String query,
+    public ApiResponse<StationResponseDTO.StationPreviewListDTO> getStations(@RequestParam("query") String query,
                                                                           @RequestParam("lastId") Long lastId,
                                                                           @RequestParam(value = "offset", defaultValue = "10") int offset,
                                                                           @RequestParam("latitude") double latitude,
                                                                           @RequestParam("longitude") double longitude) {
         List<Station> stations = stationQueryService.getStations(query, lastId, offset, latitude, longitude);
-        return ApiResponse.onSuccess(
-                stations.stream().map(station -> StationResponseDTO.StationPreviewDTO.of(station, latitude, longitude)).toList()
-        );
+        return ApiResponse.onSuccess(StationResponseDTO.StationPreviewListDTO.of(stations, latitude, longitude));
     }
 
 
@@ -80,13 +78,10 @@ public class StationController {
 
     @GetMapping("/stations/members")
     @Operation(summary = "즐겨찾기한 충전소 조회", description = "내가 즐겨찾기한 충전소 조회")
-    public ApiResponse<List<StationResponseDTO.StationPreviewDTO>> getFavoriteStations(@AuthenticatedMember Member member,
+    public ApiResponse<StationResponseDTO.StationPreviewListDTO> getFavoriteStations(@AuthenticatedMember Member member,
                                                                                        @RequestParam("latitude") double latitude,
                                                                                        @RequestParam("longitude") double longitude) {
         List<Station> stations = favoriteQueryService.getFavoritesByMember(member);
-        return ApiResponse.onSuccess(stations.stream()
-                .map(station -> StationResponseDTO.StationPreviewDTO.of(station, latitude, longitude))
-                .toList()
-        );
+        return ApiResponse.onSuccess(StationResponseDTO.StationPreviewListDTO.of(stations, latitude, longitude));
     }
 }
