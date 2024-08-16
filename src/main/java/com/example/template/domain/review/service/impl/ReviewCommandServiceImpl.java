@@ -90,32 +90,40 @@ public class ReviewCommandServiceImpl implements ReviewCommandService {
         reviewKeywordRepository.deleteAll(keywordList.stream().filter(reviewKeyword -> keywords.contains(reviewKeyword.getKeyword())).toList());
 
         List<ReviewImg> reviewImgList = new ArrayList<>(reviewImgRepository.findAllByReviewIs(review));
-        List<String> imgUrls = new ArrayList<>(reviewImgList.stream().map(ReviewImg::getImgUrl).toList());
+        List<String> removeImg = new ArrayList<>(reviewImgList.stream().map(ReviewImg::getImgUrl).toList());
+        List<String> addImg = new ArrayList<>();
         if (request.getImgUrls() != null) {
             request.getImgUrls().forEach(url -> {
                 // 현재 저장된 url에 포함되는 경우 제거 (중복 제거)
-                if (imgUrls.contains(url)) {
-                    imgUrls.remove(url);
+                if (removeImg.contains(url)) {
+                    removeImg.remove(url);
                 }
-                // 저장되지 않은 url은 새로 저장
+                // 새로 저장할 url 추가
                 else {
-                    // TODO: S3에 올라간 것인지 확인 필요, 확인되지 않은 값으로 넘길 경우 삭제에서 에러 발생
-                    reviewImgRepository.save(ReviewImg.builder()
-                            .review(review)
-                            .imgUrl(url)
-                            .build());
+                    addImg.add(url);
                 }
             });
         }
+
+        reviewImgList = reviewImgRepository.findAllByImgUrlIn(addImg);
+        if (reviewImgList.size() != addImg.size()) {
+            throw new ReviewException(ReviewErrorCode.INVALID_IMG_URL);
+        }
+
+        reviewImgList.forEach(reviewImg -> reviewImgRepository.save(ReviewImg.builder()
+                            .review(review)
+                            .imgUrl(reviewImg.getImgUrl())
+                            .build()));
+
         // 해당하지 않은 url 전체 삭제
-        s3Manager.deleteFiles(imgUrls);
-        reviewImgRepository.deleteAll(reviewImgList.stream().filter(img -> imgUrls.contains(img.getImgUrl())).toList());
+        s3Manager.deleteFiles(removeImg);
+        reviewImgRepository.deleteAllByImgUrlIn(removeImg);
 
         return review;
     }
 
     @Override
-    public Long deleteReview(Long reviewId) {
+    public Review deleteReview(Long reviewId) {
 
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new ReviewException(ReviewErrorCode.NOT_FOUND));
 
@@ -135,23 +143,28 @@ public class ReviewCommandServiceImpl implements ReviewCommandService {
 
         // review 삭제
         reviewRepository.delete(review);
-        return reviewId;
+        return review;
     }
 
     @Override
-    public boolean recommendReview(Member member, Long reviewId) {
+    public Review recommendReview(Member member, Long reviewId) {
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new ReviewException(ReviewErrorCode.NOT_FOUND));
         reviewRecommendRepository.findByMemberIsAndReviewIs(member, review).ifPresentOrElse(
-                reviewRecommendRepository::delete,
-                () -> reviewRecommendRepository.save(
+                reviewRecommend -> {
+                    reviewRecommendRepository.delete(reviewRecommend);
+                    review.decrementLikeCount();
+                },
+                () -> {
+                    reviewRecommendRepository.save(
                             ReviewRecommend.builder()
                                     .review(review)
                                     .member(member)
-                                    .build()
-                    )
+                                    .build());
+                    review.incrementLikeCount();
+                }
         );
         // 추천 수는 트리거로
-        return true;
+        return review;
     }
 
     @Override

@@ -1,6 +1,9 @@
 package com.example.template.domain.station.service.impl;
 
 import com.example.template.domain.station.dto.response.StationOpenApiResponse;
+import com.example.template.domain.station.entity.Station;
+import com.example.template.domain.station.exception.StationErrorCode;
+import com.example.template.domain.station.exception.StationException;
 import com.example.template.domain.station.exception.StationOpenAPIRuntimeException;
 import com.example.template.domain.station.repository.StationRepository;
 import com.example.template.domain.station.service.StationCommandService;
@@ -31,7 +34,14 @@ public class StationCommandServiceImpl implements StationCommandService {
     private String endpoint;
 
     @Override
-    @Scheduled(fixedDelayString = "${station.update.interval}") // 1시간마다 갱신
+    public void updateScore(Long stationId) {
+        Station station = stationRepository.findById(stationId).orElseThrow(() ->
+                new StationException(StationErrorCode.NOT_FOUND));
+        station.updateScore();
+    }
+
+    @Override
+    @Scheduled(fixedDelayString = "${station.update.interval}", initialDelay = 3600000) // 1시간마다 갱신
     public void updateStations() {
         getStationsWithAPI()
                 .flatMapMany(this::getStations)

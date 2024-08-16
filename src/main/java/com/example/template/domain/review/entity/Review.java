@@ -50,4 +50,14 @@ public class Review extends BaseEntity {
         this.content = content;
         this.score = score;
     }
+
+    public void incrementLikeCount() {
+        this.recommendationNum= (this.recommendationNum== null) ? 1 : this.recommendationNum + 1;
+    }
+
+    public void decrementLikeCount() {
+        if (this.recommendationNum!= null && this.recommendationNum> 0) {
+            this.recommendationNum--;
+        }
+    }
 }

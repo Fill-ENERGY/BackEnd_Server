@@ -4,6 +4,7 @@ import com.example.template.global.apiPayload.ApiResponse;
 import com.example.template.global.apiPayload.code.GeneralErrorCode;
 import com.example.template.global.apiPayload.code.status.BaseErrorCode;
 import com.example.template.global.apiPayload.exception.GeneralException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -18,6 +19,20 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // Annotation
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<String>> handleConstraintViolationException(
+            ConstraintViolationException e
+    ) {
+        String errorMessage = e.getConstraintViolations().stream()
+                .map(constraintViolation -> constraintViolation.getMessage())
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("ConstraintViolationException 추출 도중 에러 발생"));
+        return ResponseEntity
+                .status(GeneralErrorCode.VALIDATION_FAILED.getHttpStatus())
+                .body(ApiResponse.onFailure(GeneralErrorCode.VALIDATION_FAILED.getCode(), errorMessage));
+    }
 
     // @Valid 유효성 검사를 실패했을 시
     @ExceptionHandler(MethodArgumentNotValidException.class)
