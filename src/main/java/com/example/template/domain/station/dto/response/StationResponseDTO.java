@@ -7,8 +7,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
+import java.util.Locale;
+import java.util.logging.SimpleFormatter;
 
 public class StationResponseDTO {
 
@@ -24,37 +30,39 @@ public class StationResponseDTO {
         private int scoreCount;
         private double latitude;
         private double longitude;
-        // TODO: 평일 주말 구분 논의해보기
-        private LocalTime openTime;
-        private LocalTime closeTime;
+        private String dayOfWeek;
+        private String openTime;
+        private String closeTime;
 
         public static StationPreviewDTO of(Station station, double latitude, double longitude) {
-            int day = LocalDate.now().getDayOfWeek().getValue();
+            String dayOfWeek  = LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.KOREA);
             LocalTime openTime;
             LocalTime closeTime;
-            if (day == 6) { // 토요일
+            if (dayOfWeek.equals("토요일")) { // 토요일
                 openTime = station.getSaturdayOpen();
                 closeTime = station.getSaturdayClose();
             }
-            else if (day == 7) { // 일요일 및 공휴일
+            else if (dayOfWeek.equals("일요일")) { // 일요일 및 공휴일
                 openTime = station.getHolidayOpen();
                 closeTime = station.getHolidayClose();
+                dayOfWeek = "공휴일";
             }
             else {
                 openTime = station.getWeekdayOpen();
                 closeTime = station.getWeekdayClose();
+                dayOfWeek = "평일";
             }
             return StationPreviewDTO.builder()
                     .id(station.getId())
                     .name(station.getName())
                     .distance(StationUtil.getDistanceWithString(station.getLatitude(), station.getLongitude(), latitude, longitude))
+                    .dayOfWeek(dayOfWeek)
                     .score(station.getScore())
-                    // TODO: review 구현 이후에 추가 구현
-                    .scoreCount(0)
+                    .scoreCount(station.getReviews().size())
                     .latitude(station.getLatitude())
                     .longitude(station.getLongitude())
-                    .openTime(openTime)
-                    .closeTime(closeTime)
+                    .openTime(convertLocalTimeToString(openTime))
+                    .closeTime(convertLocalTimeToString(closeTime))
                     .build();
         }
     }
@@ -89,41 +97,49 @@ public class StationResponseDTO {
         private String distance;
         private double score;
         private int scoreCount;
+        private double latitude;
+        private double longitude;
         private boolean isFavorite;
         private String address;
         private String streetNumber;
-        private LocalTime weekdayOpen;
-        private LocalTime weekdayClose;
-        private LocalTime saturdayOpen;
-        private LocalTime saturdayClose;
-        private LocalTime holidayOpen;
-        private LocalTime holidayClose;
+        private String weekdayOpen;
+        private String weekdayClose;
+        private String saturdayOpen;
+        private String saturdayClose;
+        private String holidayOpen;
+        private String holidayClose;
         private String phoneNumber;
         private int concurrentUsageCount;
         private boolean airInjectionAvailable;
         private boolean phoneChargingAvailable;
 
-        public static StationInfoDTO from(Station station, double latitude, double longitude) {
+        public static StationInfoDTO from(Station station, double latitude, double longitude, boolean isFavorite) {
             return StationInfoDTO.builder()
                     .id(station.getId())
                     .name(station.getName())
                     .distance(StationUtil.getDistanceWithString(station.getLatitude(), station.getLongitude(), latitude, longitude))
                     .score(station.getScore())
-                    // TODO: review 구현 이후에 추가 구현
-                    .scoreCount(0)
+                    .scoreCount(station.getReviews().size())
+                    .latitude(station.getLatitude())
+                    .longitude(station.getLongitude())
+                    .isFavorite(isFavorite)
                     .address(station.getAddress())
                     .streetNumber(station.getStreetNumber())
-                    .weekdayOpen(station.getWeekdayOpen())
-                    .weekdayClose(station.getWeekdayClose())
-                    .saturdayOpen(station.getSaturdayOpen())
-                    .saturdayClose(station.getSaturdayClose())
-                    .holidayOpen(station.getHolidayOpen())
-                    .holidayClose(station.getHolidayClose())
+                    .weekdayOpen(convertLocalTimeToString(station.getWeekdayOpen()))
+                    .weekdayClose(convertLocalTimeToString(station.getWeekdayClose()))
+                    .saturdayOpen(convertLocalTimeToString(station.getSaturdayOpen()))
+                    .saturdayClose(convertLocalTimeToString(station.getSaturdayClose()))
+                    .holidayOpen(convertLocalTimeToString(station.getHolidayOpen()))
+                    .holidayClose(convertLocalTimeToString(station.getHolidayClose()))
                     .phoneNumber(station.getInstitutionPhone())
                     .concurrentUsageCount(station.getConcurrentUsageCount())
                     .airInjectionAvailable(station.isAirInjectionAvailable())
                     .phoneChargingAvailable(station.isPhoneChargingAvailable())
                     .build();
         }
+    }
+
+    private static String convertLocalTimeToString(LocalTime localTime) {
+        return DateTimeFormatter.ofPattern("HH:mm").format(localTime);
     }
 }

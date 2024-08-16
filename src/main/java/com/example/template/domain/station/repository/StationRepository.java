@@ -16,9 +16,9 @@ public interface StationRepository extends JpaRepository<Station, Long> {
 
     @Query(value = "SELECT s1.* FROM station s1 JOIN (SELECT s2.station_id, (6371 * acos(cos(radians(:latitude)) * cos(radians(s2.latitude)) * cos(radians(s2.longitude) - radians(:longitude)) + sin(radians(:latitude)) * sin(radians(s2.latitude)))) AS distance FROM station s2) AS stations ON s1.station_id = stations.station_id WHERE stations.distance > (SELECT (6371 * acos(cos(radians(:latitude)) * cos(radians(s2.latitude)) * cos(radians(s2.longitude) - radians(:longitude)) + sin(radians(:latitude)) * sin(radians(s2.latitude)))) AS distance FROM station s2 WHERE s2.station_id = :lastId) ORDER BY stations.distance ASC LIMIT :offset",
             nativeQuery = true)
-    Slice<Station> findAllOrderByDistanceFromId(@Param("latitude") double latitude, @Param("longitude") double longitude, Long lastId, int offset);
+    Slice<Station> findAllOrderByDistanceFromId(@Param("latitude") double latitude, @Param("longitude") double longitude, @Param("lastId") Long lastId, @Param("offset") int offset);
 
     @Query(value = "SELECT s1.* FROM station s1 JOIN (SELECT s2.station_id, (6371 * acos(cos(radians(:latitude)) * cos(radians(s2.latitude)) * cos(radians(s2.longitude) - radians(:longitude)) + sin(radians(:latitude)) * sin(radians(s2.latitude)))) AS distance FROM station s2) AS stations ON s1.station_id = stations.station_id ORDER BY stations.distance ASC LIMIT :offset",
             nativeQuery = true)
-    Slice<Station> findAllByOrderByDistance(@Param("latitude") double latitude, @Param("longitude") double longitude, int offset);
+    Slice<Station> findAllByOrderByDistance(@Param("latitude") double latitude, @Param("longitude") double longitude, @Param("offset") int offset);
 }

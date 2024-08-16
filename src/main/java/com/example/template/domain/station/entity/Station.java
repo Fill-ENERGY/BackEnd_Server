@@ -1,9 +1,11 @@
 package com.example.template.domain.station.entity;
 
+import com.example.template.domain.review.entity.Review;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalTime;
+import java.util.List;
 
 @Builder
 @Getter
@@ -63,6 +65,9 @@ public class Station {
     @Column(name = "institution_phone")
     private String institutionPhone;  // 관리기관 전화번호
 
+    @OneToMany(mappedBy = "station", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Review> reviews;
+
     public void update(Station station) {
         this.name = station.getName();
         this.address = station.getAddress();
@@ -78,5 +83,18 @@ public class Station {
         this.phoneChargingAvailable = station.isPhoneChargingAvailable();
         this.institutionName = station.institutionName;
         this.institutionPhone = station.institutionPhone;
+    }
+
+    public void updateScore() {
+        if (reviews != null && !reviews.isEmpty()) {
+            double totalScore = 0.0;
+            for (Review review : reviews) {
+                totalScore += review.getScore();
+            }
+            this.score = totalScore / reviews.size();
+        }
+        else {
+            this.score = 0.0;
+        }
     }
 }
