@@ -7,15 +7,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.text.SimpleDateFormat;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.List;
 import java.util.Locale;
-import java.util.logging.SimpleFormatter;
 
 public class StationResponseDTO {
 
@@ -37,8 +32,8 @@ public class StationResponseDTO {
 
         public static StationPreviewDTO of(Station station, double latitude, double longitude) {
             String dayOfWeek  = LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.KOREA);
-            LocalTime openTime;
-            LocalTime closeTime;
+            String openTime;
+            String closeTime;
             if (dayOfWeek.equals("토요일")) { // 토요일
                 openTime = station.getSaturdayOpen();
                 closeTime = station.getSaturdayClose();
@@ -62,8 +57,8 @@ public class StationResponseDTO {
                     .scoreCount(station.getReviews().size())
                     .latitude(station.getLatitude())
                     .longitude(station.getLongitude())
-                    .openTime(convertLocalTimeToString(openTime))
-                    .closeTime(convertLocalTimeToString(closeTime))
+                    .openTime(openTime)
+                    .closeTime(closeTime)
                     .build();
         }
     }
@@ -139,21 +134,17 @@ public class StationResponseDTO {
                     .isFavorite(isFavorite)
                     .address(station.getAddress())
                     .streetNumber(station.getStreetNumber())
-                    .weekdayOpen(convertLocalTimeToString(station.getWeekdayOpen()))
-                    .weekdayClose(convertLocalTimeToString(station.getWeekdayClose()))
-                    .saturdayOpen(convertLocalTimeToString(station.getSaturdayOpen()))
-                    .saturdayClose(convertLocalTimeToString(station.getSaturdayClose()))
-                    .holidayOpen(convertLocalTimeToString(station.getHolidayOpen()))
-                    .holidayClose(convertLocalTimeToString(station.getHolidayClose()))
+                    .weekdayOpen(station.getWeekdayOpen())
+                    .weekdayClose(station.getWeekdayClose())
+                    .saturdayOpen(station.getSaturdayOpen())
+                    .saturdayClose(station.getSaturdayClose())
+                    .holidayOpen(station.getHolidayOpen())
+                    .holidayClose(station.getHolidayClose())
                     .phoneNumber(station.getInstitutionPhone())
                     .concurrentUsageCount(station.getConcurrentUsageCount())
                     .airInjectionAvailable(station.isAirInjectionAvailable())
                     .phoneChargingAvailable(station.isPhoneChargingAvailable())
                     .build();
         }
-    }
-
-    private static String convertLocalTimeToString(LocalTime localTime) {
-        return DateTimeFormatter.ofPattern("HH:mm").format(localTime);
     }
 }

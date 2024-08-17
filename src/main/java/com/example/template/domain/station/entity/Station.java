@@ -33,22 +33,22 @@ public class Station {
     private double score;   // 평점
 
     @Column(name = "weekday_open")
-    private LocalTime weekdayOpen;     // 평일 운영 시작 시각
+    private String weekdayOpen;     // 평일 운영 시작 시각
 
     @Column(name = "weekday_close")
-    private LocalTime weekdayClose;    // 평일 운영 종료 시각
+    private String weekdayClose;    // 평일 운영 종료 시각
 
     @Column(name = "saturday_open")
-    private LocalTime saturdayOpen;    // 토요일 운영 시작 시각
+    private String saturdayOpen;    // 토요일 운영 시작 시각
 
     @Column(name = "saturday_close")
-    private LocalTime saturdayClose;   // 토요일 운영 종료 시각
+    private String saturdayClose;   // 토요일 운영 종료 시각
 
     @Column(name = "holiday_open")
-    private LocalTime holidayOpen;     // 공휴일 운영 시작 시각
+    private String holidayOpen;     // 공휴일 운영 시작 시각
 
     @Column(name = "holiday_close")
-    private LocalTime holidayClose;    // 공휴일 운영 종료 시각
+    private String holidayClose;    // 공휴일 운영 종료 시각
 
     @Column(name = "concurrent_usage_count")
     private Integer concurrentUsageCount;    // 동시사용가능대수
