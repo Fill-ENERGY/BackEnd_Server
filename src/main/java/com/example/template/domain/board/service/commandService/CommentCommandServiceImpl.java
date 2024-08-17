@@ -132,6 +132,12 @@ public class CommentCommandServiceImpl implements  CommentCommandService{
                 .orElseThrow(() -> new CommentException(CommentErrorCode.COMMENT_NOT_FOUND));
         validateCommentOwnership(comment, member);
 
+        // 삭제된 댓글 수정 시도 체크
+        if (comment.isDeleted()) {
+            throw new CommentException(CommentErrorCode.COMMENT_ALREADY_DELETED);
+        }
+
+        // 댓글이 해당 게시글에 속하지 않는 경우
         if (!comment.getBoard().getId().equals(boardId)) {
             throw new CommentException(CommentErrorCode.COMMENT_BOARD_MISMATCH);
         }
@@ -139,6 +145,7 @@ public class CommentCommandServiceImpl implements  CommentCommandService{
         comment.setContent(updateDTO.getContent());
         comment.setSecret(updateDTO.isSecret());
 
+        // 이미지 처리
         if (updateDTO.getImages() != null) {
             List<String> currentImageUrls = comment.getImages().stream()
                     .map(CommentImg::getCommentImgUrl)
