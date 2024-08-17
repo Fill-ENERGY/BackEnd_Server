@@ -96,6 +96,7 @@ public class MessageResponseDTO {
     @AllArgsConstructor
     public static class ThreadDetailListDTO {
         private Long threadId;
+        private Long receiverId;
         private String name;
         private String nickname;
         private String profileImg;
@@ -107,6 +108,7 @@ public class MessageResponseDTO {
                                              int unreadMessageCount, Member otherMember) {
             return ThreadDetailListDTO.builder()
                     .threadId(participant.getMessageThread().getId())
+                    .receiverId(otherMember.getId())
                     .name(otherMember.getName())
                     .nickname(otherMember.getNickname())
                     .profileImg(otherMember.getProfileImg())
@@ -162,6 +164,7 @@ public class MessageResponseDTO {
     @AllArgsConstructor
     public static class MessageListDTO {
         private Long threadId;
+        private Long receiverId;
         private String name;
         private String nickname;
         private String profileImg;
@@ -176,6 +179,7 @@ public class MessageResponseDTO {
 
             return MessageListDTO.builder()
                     .threadId(thread.getId())
+                    .receiverId(otherParticipant.getId())
                     .name(otherParticipant.getName())
                     .nickname(otherParticipant.getNickname())
                     .profileImg(otherParticipant.getProfileImg())
