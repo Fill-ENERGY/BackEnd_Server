@@ -7,6 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface MemberCommandService {
 
-    ProfileResponseDTO.ProfileDTO updateProfile(Member member, MultipartFile file, ProfileRequestDTO.UpdateProfileDTO updateProfileDTO);
+    ProfileResponseDTO.MyProfileDTO updateProfile(Member member, MultipartFile file, ProfileRequestDTO.UpdateProfileDTO updateProfileDTO);
 
 }
