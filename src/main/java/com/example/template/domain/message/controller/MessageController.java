@@ -9,6 +9,7 @@ import com.example.template.domain.message.service.MessageCommandService;
 import com.example.template.domain.message.service.MessageQueryService;
 import com.example.template.global.annotation.AuthenticatedMember;
 import com.example.template.global.apiPayload.ApiResponse;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -41,7 +42,8 @@ public class MessageController {
     }
 
     @PostMapping(value = "/messages")
-    @Operation(summary = "쪽지 전송", description = "쪽지를 전송합니다. threadId가 없는 경우(첫 쪽지인 경우) 해당 필드만 제외하고 전송해주세요.")
+    @Operation(summary = "쪽지 전송", description = "쪽지를 전송합니다. threadId가 없는 경우(첫 쪽지인 경우) 해당 필드만 제외하고 전송해주세요.\n\n" +
+            "이미지를 전송하는 경우, 쪽지 이미지 업로드 api의 응답 결과를 images 필드에 담아 전송해주세요.")
     public ApiResponse<MessageResponseDTO.MessageDTO> createMessage(@Valid @RequestBody MessageRequestDTO.CreateMessageDTO requestDTO,
                                                                     @AuthenticatedMember Member member) {
         MessageResponseDTO.MessageDTO messageDTO = messageCommandService.createMessage(requestDTO, member);
@@ -49,7 +51,7 @@ public class MessageController {
     }
 
     @GetMapping("/messages/{messageId}")
-    @Operation(summary = "쪽지 단일 조회")
+    @Operation(summary = "쪽지 단일 조회", description = "채팅 ui가 아닌 이전 디자인(리스트 방식)으로 진행하는 경우 사용되는 api입니다.")
     public ApiResponse<MessageResponseDTO.MessageDTO> getMessage(@PathVariable("messageId") Long messageId, @AuthenticatedMember Member member) {
         MessageResponseDTO.MessageDTO messageDTO= messageQueryService.getMessage(messageId, member);
         return ApiResponse.onSuccess(messageDTO);
@@ -127,6 +129,7 @@ public class MessageController {
     }
 
     // TODO: 스케줄러 테스트용 api
+    @Hidden
     @PostMapping("/messages/hard-delete-thread")
     @Operation(summary = "채팅방 삭제(hard delete) 스케쥴러 테스트용", description = "(연동x) 채팅방을 물리적으로 삭제합니다. 참여자가 없는 채팅방을 삭제합니다.")
     public ApiResponse<String> triggerHardDeleteThread() {
@@ -134,6 +137,7 @@ public class MessageController {
         return ApiResponse.onSuccess("채팅방 삭제 스케쥴러 호출");
     }
 
+    @Hidden
     @PostMapping("/messages/hard-delete-message")
     @Operation(summary = "쪽지 삭제(hard delete) 스케쥴러 테스트용", description = "(연동x) 쪽지를 물리적으로 삭제합니다. 보낸 사람과 받는 사람이 모두 삭제한 쪽지를 삭제합니다.")
     public ApiResponse<String> triggerHardDeleteMessage() {
@@ -142,6 +146,7 @@ public class MessageController {
     }
 
     // TODO :쪽지 이미지 삭제 스케줄러 테스트용 api
+    @Hidden
     @Operation(summary = "쪽지 이미지 삭제 스케쥴러 테스트용", description = "(연동x) message와 매핑이 안된 messageimg를 삭제합니다.")
     @PostMapping("/messages/cleanup-unmapped-images")
     public ApiResponse<String> cleanupUnmappedImages() {
