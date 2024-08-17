@@ -32,8 +32,6 @@ public class BoardController {
     private final BoardCommandService boardCommandService;
 
     // QueryService
-    // TODO : 내가 쓴 게시글
-    // TODO : 내가 댓글 단 게시글
     @Operation(summary = "게시글 목록 조회 (전체 및 카테고리별)", description = "커뮤니티 게시글 목록을 전체 또는 카테고리별로 무한 스크롤 방식으로 조회합니다..")
     @GetMapping
     public ApiResponse<BoardResponseDTO.BoardListDTO> getBoardList(
@@ -93,6 +91,7 @@ public class BoardController {
     public ResponseEntity<ApiResponse<BoardResponseDTO.BoardDTO>> createBoard(
             @Valid @RequestBody BoardRequestDTO.CreateBoardDTO createBoardDTO,
             @AuthenticatedMember Member member) {
+        // TODO: 어차피 게시글 목록 페이지로 리다이렉트 되어서, boardId만 Return 하는 방식 고려
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.onSuccess(HttpStatus.CREATED,
