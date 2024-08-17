@@ -130,12 +130,12 @@ public class CommentCommandServiceImpl implements  CommentCommandService{
     public CommentResponseDTO.CommentDTO updateComment(Long boardId, Long commentId, CommentRequestDTO.UpdateDTO updateDTO, Member member) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new CommentException(CommentErrorCode.COMMENT_NOT_FOUND));
-        validateCommentOwnership(comment, member);
-
         // 삭제된 댓글 수정 시도 체크
         if (comment.isDeleted()) {
             throw new CommentException(CommentErrorCode.COMMENT_ALREADY_DELETED);
         }
+
+        validateCommentOwnership(comment, member);
 
         // 댓글이 해당 게시글에 속하지 않는 경우
         if (!comment.getBoard().getId().equals(boardId)) {
