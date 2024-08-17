@@ -42,7 +42,7 @@ public class BoardQueryServiceImpl implements BoardQueryService {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
 
-        Boolean isLiked = boardLikeRepository.existsByMemberAndBoard(member, board);
+        boolean isLiked = boardLikeRepository.existsByMemberAndBoard(member, board);
         return BoardResponseDTO.BoardDTO.from(board, member.getId(), isLiked);
     }
 
