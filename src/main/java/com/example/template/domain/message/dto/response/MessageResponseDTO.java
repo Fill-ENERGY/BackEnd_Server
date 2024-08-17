@@ -28,6 +28,7 @@ public class MessageResponseDTO {
     @AllArgsConstructor
     public static class MessageDTO {
         private Long messageId;
+        private Long threadId;
         private String content;
         private List<String> images;
         private Long sender;
@@ -38,6 +39,7 @@ public class MessageResponseDTO {
         public static MessageDTO from(Message message) {
             return MessageDTO.builder()
                     .messageId(message.getId())
+                    .threadId(message.getMessageThread().getId())
                     .content(message.getContent())
                     .images(message.getImages().stream().map(MessageImg::getImgUrl).toList())
                     .sender(message.getSender().getId())
