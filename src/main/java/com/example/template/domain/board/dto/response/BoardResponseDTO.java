@@ -30,15 +30,15 @@ public class BoardResponseDTO {
         private String content;
         private Category category;
         private HelpStatus helpStatus;
-        private Boolean isAuthor;
-        private Boolean isLiked;
+        private boolean isAuthor;
+        private boolean isLiked;
         private Integer likeNum;
         private Integer commentCount;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
         private List<String> images;
 
-        public static BoardDTO from(Board board, Long currentMemberId, Boolean isLiked) {
+        public static BoardDTO from(Board board, Long currentMemberId, boolean isLiked) {
             return BoardDTO.builder()
                     .id(board.getId())
                     .memberId(board.getMember().getId())
@@ -100,7 +100,7 @@ public class BoardResponseDTO {
         private boolean isLiked;
         private Integer likeCount;
 
-        public static BoardLikeDTO from(Board board, Long currentMemberId, Boolean isLiked) {
+        public static BoardLikeDTO from(Board board, Long currentMemberId, boolean isLiked) {
             return BoardLikeDTO.builder()
                     .memberId(currentMemberId)
                     .boardId(board.getId())

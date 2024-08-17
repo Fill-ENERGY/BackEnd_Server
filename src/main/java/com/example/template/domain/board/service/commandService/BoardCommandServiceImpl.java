@@ -133,7 +133,7 @@ public class BoardCommandServiceImpl implements BoardCommandService {
             }
         }
         Board updatedBoard = boardRepository.save(board);
-        Boolean isLiked = boardLikeRepository.existsByMemberAndBoard(member, updatedBoard);
+        boolean isLiked = boardLikeRepository.existsByMemberAndBoard(member, updatedBoard);
         return BoardResponseDTO.BoardDTO.from(updatedBoard, member.getId(), isLiked);
     }
 
