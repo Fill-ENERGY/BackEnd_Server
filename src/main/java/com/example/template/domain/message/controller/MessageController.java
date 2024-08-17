@@ -41,7 +41,7 @@ public class MessageController {
     }
 
     @PostMapping(value = "/messages")
-    @Operation(summary = "쪽지 전송", description = "쪽지를 전송합니다. ")
+    @Operation(summary = "쪽지 전송", description = "쪽지를 전송합니다. threadId가 없는 경우(첫 쪽지인 경우) 해당 필드만 제외하고 전송해주세요.")
     public ApiResponse<MessageResponseDTO.MessageDTO> createMessage(@Valid @RequestBody MessageRequestDTO.CreateMessageDTO requestDTO,
                                                                     @AuthenticatedMember Member member) {
         MessageResponseDTO.MessageDTO messageDTO = messageCommandService.createMessage(requestDTO, member);
