@@ -6,6 +6,7 @@ import com.example.template.domain.board.entity.enums.Category;
 import com.example.template.domain.board.entity.enums.SortType;
 import com.example.template.domain.board.exception.BoardErrorCode;
 import com.example.template.domain.board.exception.BoardException;
+import com.example.template.domain.board.repository.BoardLikeRepository;
 import com.example.template.domain.board.repository.BoardRepository;
 import com.example.template.domain.member.entity.Member;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +24,7 @@ import java.util.List;
 public class BoardQueryServiceImpl implements BoardQueryService {
 
     private final BoardRepository boardRepository;
+    private final BoardLikeRepository boardLikeRepository;
 
     @Override
     public BoardResponseDTO.BoardListDTO getBoardList(Category category,
@@ -30,35 +34,37 @@ public class BoardQueryServiceImpl implements BoardQueryService {
                                                       Member member) {
         cursor = initializeCursor(cursor);
         List<Board> boards = fetchBoards(category, cursor, limit, sortType);
-        return createBoardListDTO(boards, limit, member.getId());
+        return createBoardListDTO(boards, limit, member);
     }
 
     @Override
     public BoardResponseDTO.BoardDTO getBoardDetail(Long boardId, Member member) {
         Board board = boardRepository.findById(boardId)
                 .orElseThrow(() -> new BoardException(BoardErrorCode.BOARD_NOT_FOUND));
-        return BoardResponseDTO.BoardDTO.from(board, member.getId());
+
+        Boolean isLiked = boardLikeRepository.existsByMemberAndBoard(member, board);
+        return BoardResponseDTO.BoardDTO.from(board, member.getId(), isLiked);
     }
 
     public BoardResponseDTO.BoardListDTO getMyPosts(Long cursor, Integer limit, Member member) {
         cursor = initializeCursor(cursor);
         PageRequest pageRequest = PageRequest.of(0, limit + 1);
         List<Board> boards = boardRepository.findMyPosts(member.getId(), cursor, pageRequest);
-        return createBoardListDTO(boards, limit, member.getId());
+        return createBoardListDTO(boards, limit, member);
     }
 
     public BoardResponseDTO.BoardListDTO getMyCommentedPosts(Long cursor, Integer limit, Member member) {
         cursor = initializeCursor(cursor);
         PageRequest pageRequest = PageRequest.of(0, limit + 1);
         List<Board> boards = boardRepository.findMyCommentedPosts(member.getId(), cursor, pageRequest);
-        return createBoardListDTO(boards, limit, member.getId());
+        return createBoardListDTO(boards, limit, member);
     }
 
     public BoardResponseDTO.BoardListDTO getMyLikedPosts(Long cursor, Integer limit, Member member) {
         cursor = initializeCursor(cursor);
         PageRequest pageRequest = PageRequest.of(0, limit + 1);
         List<Board> boards = boardRepository.findMyLikedPosts(member.getId(), cursor, pageRequest);
-        return createBoardListDTO(boards, limit, member.getId());
+        return createBoardListDTO(boards, limit, member);
     }
 
     private Long initializeCursor(Long cursor) {
@@ -82,12 +88,19 @@ public class BoardQueryServiceImpl implements BoardQueryService {
         }
     }
 
-    private BoardResponseDTO.BoardListDTO createBoardListDTO(List<Board> boards, Integer limit, Long memberId) {
+    private BoardResponseDTO.BoardListDTO createBoardListDTO(List<Board> boards, Integer limit, Member member) {
         boolean hasNext = boards.size() > limit;
         if (hasNext) {
             boards = boards.subList(0, limit);
         }
         Long nextCursor = hasNext ? boards.get(boards.size() - 1).getId() : null;
-        return BoardResponseDTO.BoardListDTO.of(boards, nextCursor, hasNext, memberId);
+
+        // 좋아요 상태 일괄 조회
+        Set<Long> likedBoardIds = boardLikeRepository.findByMemberAndBoardIn(member, boards)
+                .stream()
+                .map(boardLike -> boardLike.getBoard().getId())
+                .collect(Collectors.toSet());
+
+        return BoardResponseDTO.BoardListDTO.of(boards, nextCursor, hasNext, member.getId(), likedBoardIds);
     }
 }
