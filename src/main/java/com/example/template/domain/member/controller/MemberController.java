@@ -40,7 +40,6 @@ public class MemberController {
         return ApiResponse.onSuccess(kakaoService.loginOrSignupByKakao(requestDTO));
     }
 
-
     @Operation(summary = "로그아웃")
     @PostMapping("/logout")
     public ApiResponse<String> logout(HttpServletRequest request) {

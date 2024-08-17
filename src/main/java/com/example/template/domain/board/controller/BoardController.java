@@ -48,13 +48,40 @@ public class BoardController {
 
     @Operation(summary = "게시글 상세 조회", description = "지정된 ID의 게시글 상세 정보를 조회합니다.")
     @GetMapping("/{boardId}")
-    public ApiResponse<BoardResponseDTO.BoardDetailDTO> getBoardDetail(@PathVariable("boardId") Long boardId,
+    public ApiResponse<BoardResponseDTO.BoardDTO> getBoardDetail(@PathVariable("boardId") Long boardId,
                                                                        @AuthenticatedMember Member member) {
         return ApiResponse.onSuccess(boardQueryService.getBoardDetail(boardId, member));
     }
 
+    @Operation(summary = "내가 쓴 게시글 조회", description = "사용자가 작성한 게시글 목록을 최신순으로 커서 기반 페이지네이션으로 조회합니다.")
+    @GetMapping("/my-posts")
+    public ApiResponse<BoardResponseDTO.BoardListDTO> getMyPosts(
+            @RequestParam(defaultValue = "0") Long cursor,
+            @RequestParam(defaultValue = "10") Integer limit,
+            @AuthenticatedMember Member member) {
+        return ApiResponse.onSuccess(boardQueryService.getMyPosts(cursor, limit, member));
+    }
+
+    @Operation(summary = "내가 댓글 단 게시글 조회", description = "사용자가 댓글을 작성한 게시글 목록을 최신순으로 커서 기반 페이지네이션으로 조회합니다.")
+    @GetMapping("/my-comments")
+    public ApiResponse<BoardResponseDTO.BoardListDTO> getMyCommentedPosts(
+            @RequestParam(defaultValue = "0") Long cursor,
+            @RequestParam(defaultValue = "10") Integer limit,
+            @AuthenticatedMember Member member) {
+        return ApiResponse.onSuccess(boardQueryService.getMyCommentedPosts(cursor, limit, member));
+    }
+
+    @Operation(summary = "내가 좋아요 한 게시글 조회", description = "사용자가 좋아요를 누른 게시글 목록을 최신순으로 커서 기반 페이지네이션으로 조회합니다.")
+    @GetMapping("/my-likes")
+    public ApiResponse<BoardResponseDTO.BoardListDTO> getMyLikedPosts(
+            @RequestParam(defaultValue = "0") Long cursor,
+            @RequestParam(defaultValue = "10") Integer limit,
+            @AuthenticatedMember Member member) {
+        return ApiResponse.onSuccess(boardQueryService.getMyLikedPosts(cursor, limit, member));
+    }
+
     // CommandService
-    @Operation(summary = "이미지 업로드", description = "게시글에 첨부할 이미지를 업로드합니다.")
+    @Operation(summary = "커뮤니티 게시글 이미지 업로드", description = "게시글에 첨부할 이미지를 업로드합니다.")
     @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<BoardResponseDTO.BoardImgDTO> uploadBoardImages(
             @RequestPart("images") List<MultipartFile> images) {

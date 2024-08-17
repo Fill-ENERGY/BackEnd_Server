@@ -78,18 +78,6 @@ public class BoardResponseDTO {
 
     @Getter
     @Builder
-    public static class BoardDetailDTO {
-        private BoardDTO board;
-
-        public static BoardDetailDTO of(Board board, Member currentMember) {
-            return BoardDetailDTO.builder()
-                    .board(BoardDTO.from(board, currentMember.getId()))
-                    .build();
-        }
-    }
-
-    @Getter
-    @Builder
     public static class BoardStatusDTO {
         private Long boardId;
         private String helpStatus;
