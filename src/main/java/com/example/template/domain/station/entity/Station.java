@@ -4,7 +4,6 @@ import com.example.template.domain.review.entity.Review;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalTime;
 import java.util.List;
 
 @Builder

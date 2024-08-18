@@ -38,7 +38,6 @@ public class ReviewResponseDTO {
         private Long authorId;
         private String authorName;
         private boolean isRecommended;
-        private String username;
 
         public static ReviewPreviewDTO of(Review review, boolean isRecommended) {
             return ReviewPreviewDTO.builder()

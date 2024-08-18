@@ -65,8 +65,16 @@ public class ReviewController {
 
     @GetMapping("/members")
     @Operation(summary = "본인 평가 목록 가져오는 API", description = "로그인된 유저가 작성한 평가 목록 전체 조회")
-    public ApiResponse<List<ReviewResponseDTO.ReviewPreviewDTO>> getReviewsOfUsers(@AuthenticatedMember Member member) {
-        List<Review> reviewList = reviewQueryService.getReviewsOfUsers(member);
+    @Parameters({
+            @Parameter(name = "query", description = "RECENT (최신순), RECOMMENDATION (추천순)"),
+            @Parameter(name = "lastId", description = "마지막 충전소 번호 처음: 0"),
+            @Parameter(name = "offset", description = "가져올 충전소 개수, default = 10")
+    })
+    public ApiResponse<List<ReviewResponseDTO.ReviewPreviewDTO>> getReviewsOfUsers(@AuthenticatedMember Member member,
+                                                                                   @RequestParam("query") String query,
+                                                                                   @RequestParam("lastId") Long lastId,
+                                                                                   @RequestParam(value = "offset", defaultValue = "10") int offset) {
+        List<Review> reviewList = reviewQueryService.getReviewsOfUsers(member, query, lastId, offset);
         return ApiResponse.onSuccess(reviewList
                 .stream()
                 .map(review -> ReviewResponseDTO.ReviewPreviewDTO.of(review, reviewCommandService.isRecommended(review.getId(), member)))

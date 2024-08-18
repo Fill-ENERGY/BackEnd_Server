@@ -20,4 +20,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findAllByOrderByScore(@Param("reviewId") Long reviewId, @Param("offset") int offset);
 
     Page<Review> findAllByOrderByScoreDescIdDesc(Pageable pageable);
+
+    @Query(value = "SELECT r1.* FROM review r1 JOIN (SELECT r2.review_id, CONCAT(LPAD(r2.recommendation_num, 10, '0'), LPAD(r2.created_at, 19, '0')) AS cursorValue FROM review r2) AS cursorTable ON cursorTable.review_id = r1.review_id WHERE cursorValue < (SELECT CONCAT(LPAD(r2.recommendation_num, 10, '0'), LPAD(r2.created_at, 19, '0')) FROM review r2 WHERE r2.review_id = :lastId) ORDER BY recommendation_num DESC, created_at DESC LIMIT :offset", nativeQuery = true)
+    List<Review> findAllByOrderByRecommendationNumDescCreatedAtDescFromId(@Param("lastId") Long lastId, @Param("offset") int offset);
+
+    Page<Review> findAllByOrderByRecommendationNumDescCreatedAtDesc(Pageable pageable);
 }
