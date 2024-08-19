@@ -7,6 +7,8 @@ import com.example.template.domain.member.entity.Member;
 import com.example.template.global.annotation.AuthenticatedMember;
 import com.example.template.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +31,10 @@ public class BlockController {
 
     @GetMapping("/blocks/members")
     @Operation(summary = "차단 목록 조회", description = "멤버가 차단한 목록을 조회합니다. 차단 목록이 없으면 빈 배열을 반환합니다.")
+    @Parameters({
+            @Parameter(name = "cursor", description = "마지막 차단 id(blockId)"),
+            @Parameter(name = "limit", description = "가져올 차단 내역 개수, default = 10"),
+    })
     public ApiResponse<BlockResponseDTO.BlockListDTO> getBlockList(@RequestParam(defaultValue = "0") Long cursor,
                                                                          @RequestParam(defaultValue = "10") Integer limit,
                                                                          @AuthenticatedMember Member member) {
