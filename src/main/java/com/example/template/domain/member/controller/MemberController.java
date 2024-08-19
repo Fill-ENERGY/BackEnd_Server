@@ -33,6 +33,13 @@ public class MemberController {
         return ApiResponse.onSuccess(memberService.signup(requestDTO));
     }
 
+    @Operation(summary = "일반 로그인", description = "이메일, 비밀번호를 입력받아 로그인을 진행합니다." +
+            "반환 값으로 JWT accessToken과 refreshToken이 발급됨. accessToken 값을 Authorize에 인증")
+    @PostMapping("/login")
+    public ApiResponse<MemberResponseDTO.LoginResultDTO> login(@Valid @RequestBody MemberRequestDTO.CustomLoginDTO requestDTO) {
+        return ApiResponse.onSuccess(memberService.login(requestDTO));
+    }
+
     @Operation(summary = "카카오 로그인 및 회원가입", description = "카카오 accessToken을 입력받아 로그인 또는 회원가입을 처리합니다. " +
             "반환 값으로 JWT accessToken과 refreshToken이 발급되며, accessToken 값을 Authorize에 인증")
     @PostMapping("/social/loginorsignup/kakao")
