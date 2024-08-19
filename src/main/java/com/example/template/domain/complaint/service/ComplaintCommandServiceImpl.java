@@ -67,7 +67,7 @@ public class ComplaintCommandServiceImpl implements ComplaintCommandService{
     }
 
     @Override
-    public ComplaintResponseDTO.ComplaintDTO createComplaint(Member member, ComplaintRequestDTO.CreateComplaintDTO createComplaintDTO) {
+    public ComplaintResponseDTO.ComplaintDetailDTO createComplaint(Member member, ComplaintRequestDTO.CreateComplaintDTO createComplaintDTO) {
         Station station = stationRepository.findById(createComplaintDTO.getStationId()).
                 orElseThrow(() -> new StationException(StationErrorCode.NOT_FOUND));
         Complaint complaint = ComplaintRequestDTO.CreateComplaintDTO.toEntity(createComplaintDTO, station, member);
@@ -84,11 +84,8 @@ public class ComplaintCommandServiceImpl implements ComplaintCommandService{
         }
 
         Complaint savedComplaint = complaintRepository.save(complaint);
+        return ComplaintResponseDTO.ComplaintDetailDTO.from(savedComplaint, complaintImgs);
 
-        if(complaintImgs!=null) {
-            return ComplaintResponseDTO.ComplaintDTO.from(savedComplaint, complaintImgs);
-        }
-        return ComplaintResponseDTO.ComplaintDTO.from(savedComplaint);
     }
 
 

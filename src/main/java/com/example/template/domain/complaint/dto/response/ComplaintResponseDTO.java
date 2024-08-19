@@ -29,50 +29,60 @@ public class ComplaintResponseDTO {
     }
 
     @Builder
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     @Getter
-    public static class ComplaintDTO {
+    public static class ComplaintDTO{
+        private String image;
+        private String name;
+        private String content;
+        private String complaintType;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+
+        public static ComplaintDTO from(Complaint complaint, ComplaintImg complaintImg) {
+            return ComplaintDTO.builder()
+                    .image(complaintImg != null ? complaintImg.getImgUrl() : null) // 이미지가 null이 아닐 경우 URL 반환, null이면 null 반환
+                    .name(complaint.getStation().getName())
+                    .content(complaint.getContent())
+                    .complaintType(complaint.getComplaintType().getDescription())
+                    .createdAt(complaint.getCreatedAt())
+                    .updatedAt(complaint.getUpdatedAt())
+                    .build();
+        }
+    }
+    @Builder
+    @Getter
+    public static class ComplaintDetailDTO {
         private Long complaintId;
+        private String name;
+        private String address; //도로명
+        private String streetNumber;//지번
+        private String institutionPhone; //번호
         private String title;
         private String content;
-        private ComplaintType complaintType;
+        private String complaintType;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
         private List<String> images;
 
-        public static ComplaintDTO from(Complaint complaint, List<ComplaintImg> complaintImgList){
+        public static ComplaintDetailDTO from(Complaint complaint, List<ComplaintImg> complaintImgList){
             List<String> complaintImgURL = complaintImgList.stream()
                     .map(ComplaintImg::getImgUrl)
                     .collect(Collectors.toList());
-
-            return ComplaintDTO.builder()
+            return ComplaintDetailDTO.builder()
                     .complaintId(complaint.getId())
-                    .complaintType(complaint.getComplaintType())
+                    .name(complaint.getStation().getName())
+                    .address(complaint.getStation().getAddress())
+                    .streetNumber(complaint.getStation().getStreetNumber())
+                    .institutionPhone(complaint.getStation().getInstitutionPhone())
                     .title(complaint.getTitle())
                     .content(complaint.getContent())
+                    .complaintType(complaint.getComplaintType().getDescription())
                     .images(complaintImgURL)
                     .createdAt(complaint.getCreatedAt())
                     .updatedAt(complaint.getUpdatedAt())
                     .build();
         }
 
-        //목록조회를 위해 이미지가 없는 버전
-        public static ComplaintDTO from(Complaint complaint){
-            return ComplaintDTO.builder()
-                    .complaintId(complaint.getId())
-                    .complaintType(complaint.getComplaintType())
-                    .title(complaint.getTitle())
-                    .content(complaint.getContent())
-                    .createdAt(complaint.getCreatedAt())
-                    .updatedAt(complaint.getUpdatedAt())
-                    .build();
-        }
-
-        public static List<ComplaintDTO> from(List<Complaint> complaints) {
-            return complaints.stream()
-                    .map(ComplaintDTO::from)
-                    .collect(Collectors.toList());
-        }
     }
 
     @Getter

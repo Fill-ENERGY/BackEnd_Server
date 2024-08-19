@@ -39,20 +39,20 @@ public class ComplaintController {
 
     @Operation(summary = "새 민원글 작성")
     @PostMapping()
-    public ApiResponse<ComplaintResponseDTO.ComplaintDTO> createComplaint(@AuthenticatedMember Member member,
+    public ApiResponse<ComplaintResponseDTO.ComplaintDetailDTO> createComplaint(@AuthenticatedMember Member member,
             @Valid @RequestBody ComplaintRequestDTO.CreateComplaintDTO createComplaintDTO) {
         return ApiResponse.onSuccess(complaintCommandService.createComplaint(member, createComplaintDTO));
     }
 
 
     @Operation(summary = "내가 쓴 민원글 상세 조회")
-    @GetMapping("/{complaintId}")
-    ApiResponse<ComplaintResponseDTO.ComplaintDTO>getComplaintDetail(@AuthenticatedMember Member member, @PathVariable("complaintId") Long complaintId){
+    @GetMapping("/my-complaints/{complaintId}")
+    ApiResponse<ComplaintResponseDTO.ComplaintDetailDTO>getComplaintDetail(@AuthenticatedMember Member member, @PathVariable("complaintId") Long complaintId){
         return ApiResponse.onSuccess(complaintQueryService.getComplaintDetail(member, complaintId));
     }
 
     @Operation(summary = "내가 쓴 민원글 목록 조회")
-    @GetMapping()
+    @GetMapping("/my-complaints")
     ApiResponse<List<ComplaintResponseDTO.ComplaintDTO>> getComplaintList(@AuthenticatedMember Member member){
         return ApiResponse.onSuccess(complaintQueryService.getComplaintList(member));
     }
