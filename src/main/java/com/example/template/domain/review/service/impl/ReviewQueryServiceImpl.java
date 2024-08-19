@@ -2,6 +2,7 @@ package com.example.template.domain.review.service.impl;
 
 import com.example.template.domain.member.entity.Member;
 import com.example.template.domain.review.entity.Review;
+import com.example.template.domain.review.enums.ContainsQuery;
 import com.example.template.domain.review.enums.SortType;
 import com.example.template.domain.review.exception.ReviewErrorCode;
 import com.example.template.domain.review.exception.ReviewException;
@@ -49,23 +50,14 @@ public class ReviewQueryServiceImpl implements ReviewQueryService {
     }
 
     @Override
-    public List<Review> getReviewsOfUsers(Member member, String query, Long lastId, int offset) {
+    public List<Review> getReviewsOfUsers(Member member, String query, Long lastId, int offset, String only) {
         List<Review> reviews;
         // TODO: 사진, 태그 글만 있는 경우 의논한 뒤 구현 필요
-        if (query.equalsIgnoreCase(SortType.RECENT.toString())) {
-            if (lastId.equals(0L)) {
-                reviews = reviewRepository.findAllByMemberIsOrderByCreatedAtDesc(member);
-            }
-            else {
-                Review review = reviewRepository.findById(lastId).orElseThrow(() -> new ReviewException(ReviewErrorCode.NOT_FOUND));
-                Pageable pageable = PageRequest.of(0, offset);
-                reviews = reviewRepository.findAllByCreatedAtLessThanOrderByCreatedAtDesc(review.getCreatedAt(), pageable).getContent();
-            }
+        if (only.equalsIgnoreCase(ContainsQuery.PHOTO.toString())) {
+            reviews = getReviewsOfUsersOnlyPhoto(member, query, lastId, offset);
         }
-        else if (query.equalsIgnoreCase(SortType.RECOMMENDATION.toString())) {
-            Pageable pageable = PageRequest.of(0, offset);
-            reviews = lastId.equals(0L) ? reviewRepository.findAllByOrderByRecommendationNumDescCreatedAtDesc(pageable).getContent()
-                    : reviewRepository.findAllByOrderByRecommendationNumDescCreatedAtDescFromId(lastId, offset);
+        else if (only.equalsIgnoreCase(ContainsQuery.NONE.toString())){
+            reviews = getAllReviewsOfUsers(member, query, lastId, offset);
         }
         else {
             throw new ReviewException(ReviewErrorCode.QUERY_BAD_REQUEST);
@@ -81,5 +73,45 @@ public class ReviewQueryServiceImpl implements ReviewQueryService {
     @Override
     public boolean isExist(Long reviewId) {
         return reviewRepository.existsById(reviewId);
+    }
+
+    private List<Review> getAllReviewsOfUsers(Member member, String query, Long lastId, int offset) {
+        if (query.equalsIgnoreCase(SortType.RECENT.toString())) {
+            if (lastId.equals(0L)) {
+                return reviewRepository.findAllByMemberIsOrderByCreatedAtDesc(member);
+            }
+            else {
+                Review review = reviewRepository.findById(lastId).orElseThrow(() -> new ReviewException(ReviewErrorCode.NOT_FOUND));
+                Pageable pageable = PageRequest.of(0, offset);
+                return reviewRepository.findAllByCreatedAtLessThanOrderByCreatedAtDesc(review.getCreatedAt(), pageable).getContent();
+            }
+        }
+        else if (query.equalsIgnoreCase(SortType.RECOMMENDATION.toString())) {
+            Pageable pageable = PageRequest.of(0, offset);
+            return lastId.equals(0L) ? reviewRepository.findAllByOrderByRecommendationNumDescCreatedAtDesc(pageable).getContent()
+                    : reviewRepository.findAllByOrderByRecommendationNumDescCreatedAtDescFromId(lastId, offset);
+        }
+        else {
+            throw new ReviewException(ReviewErrorCode.QUERY_BAD_REQUEST);
+        }
+    }
+
+    private List<Review> getReviewsOfUsersOnlyPhoto(Member member, String query, Long lastId, int offset) {
+        if (query.equalsIgnoreCase(SortType.RECENT.toString())) {
+            if (lastId.equals(0L)) {
+                return reviewRepository.findAllByCreatedAtLessThanOrderByCreatedAtDescContainsPhoto(LocalDateTime.now(), offset);
+            }
+            else {
+                Review review = reviewRepository.findById(lastId).orElseThrow(() -> new ReviewException(ReviewErrorCode.NOT_FOUND));
+                return reviewRepository.findAllByCreatedAtLessThanOrderByCreatedAtDescContainsPhoto(review.getCreatedAt(), offset);
+            }
+        }
+        else if (query.equalsIgnoreCase(SortType.RECOMMENDATION.toString())) {
+            return lastId.equals(0L) ? reviewRepository.findAllByOrderByRecommendationNumDescCreatedAtDescContainPhoto(offset)
+                    : reviewRepository.findAllByOrderByRecommendationNumDescCreatedAtDescFromIdContainPhoto(lastId, offset);
+        }
+        else {
+            throw new ReviewException(ReviewErrorCode.QUERY_BAD_REQUEST);
+        }
     }
 }

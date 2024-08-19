@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface ReviewQueryService {
     List<Review> getReviewsOfStations(Long stationId, Long lastId, String query, int offset);
-    List<Review> getReviewsOfUsers(Member member, String query, Long lastId, int offset);
+    List<Review> getReviewsOfUsers(Member member, String query, Long lastId, int offset, String only);
     Review getReview(Long reviewId);
     boolean isExist(Long reviewId);
 }

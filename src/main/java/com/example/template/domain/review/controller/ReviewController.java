@@ -68,13 +68,15 @@ public class ReviewController {
     @Parameters({
             @Parameter(name = "query", description = "RECENT (최신순), RECOMMENDATION (추천순)"),
             @Parameter(name = "lastId", description = "마지막 충전소 번호 처음: 0"),
-            @Parameter(name = "offset", description = "가져올 충전소 개수, default = 10")
+            @Parameter(name = "offset", description = "가져올 충전소 개수, default = 10"),
+            @Parameter(name = "only", description = "PHOTO: 사진만, NONE 혹은 안 넣기: 조건 없음")
     })
     public ApiResponse<List<ReviewResponseDTO.ReviewPreviewDTO>> getReviewsOfUsers(@AuthenticatedMember Member member,
                                                                                    @RequestParam("query") String query,
                                                                                    @RequestParam("lastId") Long lastId,
-                                                                                   @RequestParam(value = "offset", defaultValue = "10") int offset) {
-        List<Review> reviewList = reviewQueryService.getReviewsOfUsers(member, query, lastId, offset);
+                                                                                   @RequestParam(value = "offset", defaultValue = "10") int offset,
+                                                                                   @RequestParam(value = "only", defaultValue = "none") String only) {
+        List<Review> reviewList = reviewQueryService.getReviewsOfUsers(member, query, lastId, offset, only);
         return ApiResponse.onSuccess(reviewList
                 .stream()
                 .map(review -> ReviewResponseDTO.ReviewPreviewDTO.of(review, reviewCommandService.isRecommended(review.getId(), member)))
