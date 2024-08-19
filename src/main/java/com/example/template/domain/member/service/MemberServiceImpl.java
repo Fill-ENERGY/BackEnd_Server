@@ -49,7 +49,7 @@ public class MemberServiceImpl implements MemberService{
     }
 
     @Override
-    public MemberResponseDTO.LoginResultDTO login(MemberRequestDTO.LoginDTO loginDTO) {
+    public MemberResponseDTO.LoginResultDTO login(MemberRequestDTO.CustomLoginDTO loginDTO) {
         // 회원 정보 존재 하는지 확인
         Member member = memberRepository.findByEmail(loginDTO.getEmail())
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
