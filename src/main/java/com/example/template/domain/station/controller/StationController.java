@@ -76,7 +76,7 @@ public class StationController {
         return ApiResponse.onSuccess(favoriteCommandService.addOrRemoveFavorite(member, stationId));
     }
 
-    @GetMapping("/stations/members")
+    @GetMapping("/stations/my-favorites")
     @Operation(summary = "즐겨찾기한 충전소 조회", description = "내가 즐겨찾기한 충전소 조회")
     @Parameters({
             @Parameter(name = "query", description = "DISTANCE (거리순), RECENT (최신순)"),

@@ -52,7 +52,6 @@ public class ReviewQueryServiceImpl implements ReviewQueryService {
     @Override
     public List<Review> getReviewsOfUsers(Member member, String query, Long lastId, int offset, String only) {
         List<Review> reviews;
-        // TODO: 사진, 태그 글만 있는 경우 의논한 뒤 구현 필요
         if (only.equalsIgnoreCase(ContainsQuery.PHOTO.toString())) {
             reviews = getReviewsOfUsersOnlyPhoto(member, query, lastId, offset);
         }
