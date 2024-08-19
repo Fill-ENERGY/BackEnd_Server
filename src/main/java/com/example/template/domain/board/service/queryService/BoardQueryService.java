@@ -13,5 +13,11 @@ public interface BoardQueryService {
                                                SortType sortType,
                                                Member member);
 
-    BoardResponseDTO.BoardDetailDTO getBoardDetail(Long boardId, Member member);
+    BoardResponseDTO.BoardDTO getBoardDetail(Long boardId, Member member);
+
+    BoardResponseDTO.BoardListDTO getMyPosts(Long cursor, Integer limit, Member member);
+
+    BoardResponseDTO.BoardListDTO getMyCommentedPosts(Long cursor, Integer limit, Member member);
+
+    BoardResponseDTO.BoardListDTO getMyLikedPosts(Long cursor, Integer limit, Member member);
 }

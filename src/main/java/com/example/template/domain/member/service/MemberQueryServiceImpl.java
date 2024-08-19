@@ -21,11 +21,18 @@ public class MemberQueryServiceImpl implements MemberQueryService {
     public ProfileResponseDTO.ProfileDTO getProfile(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(GeneralErrorCode.NOT_FOUND_404));
-        return ProfileResponseDTO.from(member);
+        return ProfileResponseDTO.ProfileDTO.from(member);
     }
 
     @Override
     public Member getMemberByEmail(String email) {
         return memberRepository.findByEmail(email).orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    @Override
+    public ProfileResponseDTO.MyProfileDTO getMyProfile(Member member) {
+        Member m = memberRepository.findById(member.getId())
+                .orElseThrow(() -> new GeneralException(GeneralErrorCode.NOT_FOUND_404));
+        return ProfileResponseDTO.MyProfileDTO.from(m);
     }
 }

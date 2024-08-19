@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -128,7 +129,14 @@ public class MessageCommandServiceImpl implements MessageCommandService {
             messageThread.setUpdatedAt(LocalDateTime.now());
 
             return messageThread;
-        } else {    // 채팅방이 존재하지 않는 경우(첫 쪽지)
+        } else {    // threadId가 전달되지 않은 경우(첫 쪽지)
+            // 해당 멤버와의 채팅방이 이미 존재하는지 확인
+            Optional<MessageThread> existingThread = messageThreadRepository.findByParticipantsMember(sender, receiver);
+
+            if (existingThread.isPresent()) {
+                throw new MessageException(MessageErrorCode.THREAD_ALREADY_EXISTS);
+            }
+
             // 채팅방 생성
             MessageThread newMessageThread = MessageThread.builder().build();
             MessageThread savedMessageThread = messageThreadRepository.save(newMessageThread);

@@ -14,7 +14,8 @@ public enum CommentErrorCode implements BaseErrorCode {
     COMMENT_BOARD_MISMATCH(HttpStatus.BAD_REQUEST, "COMMENT400", "댓글이 해당 게시글에 속하지 않습니다."),
     INVALID_IMAGE_URLS(HttpStatus.BAD_REQUEST, "COMMENT400", "일부 이미지 URL이 유효하지 않거나 찾을 수 없습니다."),
     PARENT_COMMENT_NOT_FOUND(HttpStatus.BAD_REQUEST, "COMMENT400", "부모 댓글을 찾을 수 없거나 해당 게시글에 속하지 않습니다."),
-    NESTED_REPLY_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "COMMENT400", "대댓글에 대한 답글은 작성할 수 없습니다.");
+    NESTED_REPLY_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "COMMENT400", "대댓글에 대한 답글은 작성할 수 없습니다."),
+    COMMENT_ALREADY_DELETED(HttpStatus.BAD_REQUEST,"COMMENT400","이미 삭제된 댓글은 수정할 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

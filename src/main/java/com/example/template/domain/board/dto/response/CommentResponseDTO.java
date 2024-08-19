@@ -28,17 +28,13 @@ public class CommentResponseDTO {
     public static class CommentDTO {
         private Long id;
         private String content;
-        private boolean secret;
         private Long memberId;
         private String memberName;
         private LocalDateTime createdAt;
         private List<String> images;
-        private boolean deleted;
         private Long parentId;
         // 현재 사용자가 댓글 작성자인지 여부
         private boolean author;           // true인 경우: 댓글 수정/삭제 옵션을 표시
-        // 현재 사용자가 비밀 댓글을 볼 수 있는지 여부 (게시글 작성자 or 댓글본인)
-        private boolean canViewSecret;    // true인 경우: 비밀 댓글의 실제 내용을 표시
         private List<CommentDTO> replies;
 
         public static CommentDTO from(Comment comment, Member currentMember) {
@@ -50,22 +46,17 @@ public class CommentResponseDTO {
                     .id(comment.getId())
                     // 부모 댓글이 있는 경우 부모 댓글의 ID를 설정
                     .parentId(comment.getParent() != null ? comment.getParent().getId() : null)
-                    .content(getCommentContent(comment, canViewSecret)).secret(comment.isSecret())
+                    .content(getCommentContent(comment, canViewSecret))
                     // 삭제된 댓글인 경우 작성자 ID를 null로 설정
                     .memberId(comment.isDeleted() ? null : comment.getMember().getId())
                     // 삭제된 댓글인 경우 작성자 이름을 "(삭제)"로 표시
                     .memberName(comment.isDeleted() ? DELETED_MEMBER_NAME : comment.getMember().getName())
                     .createdAt(comment.getCreatedAt())
                     // 삭제된 댓글인 경우 이미지 목록을 비움, 그렇지 않으면 이미지 URL 목록 생성
-                    .images(comment.isDeleted() ? Collections.emptyList() :
-                            comment.getImages().stream().map(CommentImg::getCommentImgUrl).toList())
-                    .deleted(comment.isDeleted())
+                    .images(getCommentImages(comment, canViewSecret))
                     // 현재 사용자가 댓글 작성자이고 댓글이 삭제되지 않았을 경우 true
                     .author(isCommentAuthor && !comment.isDeleted())
-                    // 비밀 댓글을 볼 수 있는 권한이 있고 댓글이 삭제되지 않았을 경우 true
-                    .canViewSecret(canViewSecret && !comment.isDeleted())
-                    // comment.getChildren()이 null일 경우 빈 리스트를 반환하고,
-                    // null이 아닐 경우 모든 자식 댓글을 CommentDTO로 변환
+                    // 대댓글
                     .replies(Optional.ofNullable(comment.getChildren())
                             .map(children -> children.stream()
                                     .map(childComment -> CommentDTO.from(childComment, currentMember))
@@ -95,6 +86,13 @@ public class CommentResponseDTO {
                 return SECRET_COMMENT_MESSAGE;
             }
             return comment.getContent();
+        }
+
+        private static List<String> getCommentImages(Comment comment, boolean canViewSecret) {
+            if (comment.isDeleted() || (comment.isSecret() && !canViewSecret)) {
+                return Collections.emptyList();
+            }
+            return comment.getImages().stream().map(CommentImg::getCommentImgUrl).toList();
         }
     }
 

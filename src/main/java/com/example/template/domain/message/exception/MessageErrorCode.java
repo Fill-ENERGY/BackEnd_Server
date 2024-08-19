@@ -12,6 +12,7 @@ public enum MessageErrorCode implements BaseErrorCode {
 
     // MessageThread ERROR 응답
     THREAD_NOT_FOUND(HttpStatus.NOT_FOUND, "THREAD404", "채팅방을 찾을 수 없습니다."),
+    THREAD_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "THREAD400", "채팅방이 이미 존재합니다."),
 
     // Message ERROR 응답
     MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "MESSAGE404", "쪽지를 찾을 수 없습니다."),

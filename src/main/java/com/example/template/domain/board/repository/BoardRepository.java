@@ -26,20 +26,13 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     @Query("SELECT b FROM Board b WHERE b.category = :category AND b.id < :cursor ORDER BY b.id DESC")
     List<Board> findByCategoryOrderByLatestWithCursor(@Param("category") Category category, @Param("cursor") Long cursor, Pageable pageable);
 
-    default List<Board> findAllOrderByLikesWithCursor(Long cursor, Integer limit) {
-        return findAllOrderByLikesWithCursor(cursor, PageRequest.of(0, limit));
-    }
+    @Query("SELECT b FROM Board b WHERE b.member.id = :memberId AND b.id < :cursor ORDER BY b.id DESC")
+    List<Board> findMyPosts(@Param("memberId") Long memberId, @Param("cursor") Long cursor, Pageable pageable);
 
-    default List<Board> findAllOrderByLatestWithCursor(Long cursor, Integer limit) {
-        return findAllOrderByLatestWithCursor(cursor, PageRequest.of(0, limit));
-    }
+    @Query("SELECT DISTINCT b FROM Board b JOIN b.comments c WHERE c.member.id = :memberId AND b.id < :cursor ORDER BY b.id DESC")
+    List<Board> findMyCommentedPosts(@Param("memberId") Long memberId, @Param("cursor") Long cursor, Pageable pageable);
 
-    default List<Board> findByCategoryOrderByLikesWithCursor(Category category, Long cursor, Integer limit) {
-        return findByCategoryOrderByLikesWithCursor(category, cursor, PageRequest.of(0, limit));
-    }
-
-    default List<Board> findByCategoryOrderByLatestWithCursor(Category category, Long cursor, Integer limit) {
-        return findByCategoryOrderByLatestWithCursor(category, cursor, PageRequest.of(0, limit));
-    }
+    @Query("SELECT b FROM Board b JOIN BoardLike bl ON b.id = bl.board.id WHERE bl.member.id = :memberId AND b.id < :cursor ORDER BY b.id DESC")
+    List<Board> findMyLikedPosts(@Param("memberId") Long memberId, @Param("cursor") Long cursor, Pageable pageable);
 }
 

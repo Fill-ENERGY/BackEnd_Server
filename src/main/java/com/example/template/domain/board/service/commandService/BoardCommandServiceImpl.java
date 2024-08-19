@@ -78,7 +78,7 @@ public class BoardCommandServiceImpl implements BoardCommandService {
         }
 
         Board savedBoard = boardRepository.save(board);
-        return BoardResponseDTO.BoardDTO.from(savedBoard, member.getId());
+        return BoardResponseDTO.BoardDTO.from(savedBoard, member.getId(), false);
     }
 
     @Override
@@ -132,9 +132,9 @@ public class BoardCommandServiceImpl implements BoardCommandService {
                 boardImgRepository.saveAll(newBoardImgs);
             }
         }
-
         Board updatedBoard = boardRepository.save(board);
-        return BoardResponseDTO.BoardDTO.from(updatedBoard, member.getId());
+        boolean isLiked = boardLikeRepository.existsByMemberAndBoard(member, updatedBoard);
+        return BoardResponseDTO.BoardDTO.from(updatedBoard, member.getId(), isLiked);
     }
 
     @Override
@@ -194,7 +194,7 @@ public class BoardCommandServiceImpl implements BoardCommandService {
         board.incrementLikeCount();
         boardRepository.save(board);
 
-        return BoardResponseDTO.BoardLikeDTO.from(board, member.getId());
+        return BoardResponseDTO.BoardLikeDTO.from(board, member.getId(), true);
     }
 
     @Override
@@ -210,7 +210,7 @@ public class BoardCommandServiceImpl implements BoardCommandService {
         board.decrementLikeCount();
         boardRepository.save(board);
 
-        return BoardResponseDTO.BoardLikeDTO.from(board, member.getId());
+        return BoardResponseDTO.BoardLikeDTO.from(board, member.getId(), false);
     }
 
     /*

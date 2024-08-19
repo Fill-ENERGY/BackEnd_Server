@@ -24,8 +24,8 @@ public class ProfileController {
 
     @Operation(summary = "내 프로필 조회")
     @GetMapping("")
-    public ApiResponse<ProfileResponseDTO.ProfileDTO> getMyProfile(@AuthenticatedMember Member member){
-        return ApiResponse.onSuccess(memberQueryService.getProfile(member.getId()));
+    public ApiResponse<ProfileResponseDTO.MyProfileDTO> getMyProfile(@AuthenticatedMember Member member){
+        return ApiResponse.onSuccess(memberQueryService.getMyProfile(member));
     }
 
     @Operation(summary = "다른 사용자 프로필 조회", description = "채팅 또는 댓글 프로필 클릭 시 해당 사용자의 프로필 조회")
@@ -36,7 +36,7 @@ public class ProfileController {
 
     @Operation(summary = "프로필 수정")
     @PatchMapping("")
-    public ApiResponse<ProfileResponseDTO.ProfileDTO> updateProfile(@AuthenticatedMember Member member, @RequestPart(value = "file") MultipartFile file,
+    public ApiResponse<ProfileResponseDTO.MyProfileDTO> updateProfile(@AuthenticatedMember Member member, @RequestPart(value = "file") MultipartFile file,
                                                                     @RequestPart ProfileRequestDTO.UpdateProfileDTO requestDto){
         return ApiResponse.onSuccess(memberCommandService.updateProfile(member, file, requestDto));
     }

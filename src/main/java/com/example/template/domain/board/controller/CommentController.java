@@ -39,7 +39,7 @@ public class CommentController {
     }
 
     // CommandService
-    @Operation(summary = "이미지 업로드", description = "댓글에 첨부할 이미지를 업로드합니다.")
+    @Operation(summary = "커뮤니티 댓글 이미지 업로드", description = "댓글에 첨부할 이미지를 업로드합니다.")
     @PostMapping(value = "/comments/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<CommentResponseDTO.CommentImgDTO> uploadCommentImages(
             @RequestPart("images") List<MultipartFile> images) {
