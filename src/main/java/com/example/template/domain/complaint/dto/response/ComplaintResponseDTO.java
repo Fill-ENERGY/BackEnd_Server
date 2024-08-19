@@ -31,6 +31,7 @@ public class ComplaintResponseDTO {
     @Builder
     @Getter
     public static class ComplaintDTO{
+        private Long complaintId;
         private String image;
         private String name;
         private String content;
@@ -40,6 +41,7 @@ public class ComplaintResponseDTO {
 
         public static ComplaintDTO from(Complaint complaint, ComplaintImg complaintImg) {
             return ComplaintDTO.builder()
+                    .complaintId(complaint.getId())
                     .image(complaintImg != null ? complaintImg.getImgUrl() : null) // 이미지가 null이 아닐 경우 URL 반환, null이면 null 반환
                     .name(complaint.getStation().getName())
                     .content(complaint.getContent())
