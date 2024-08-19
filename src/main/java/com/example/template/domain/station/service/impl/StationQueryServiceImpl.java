@@ -1,19 +1,19 @@
 package com.example.template.domain.station.service.impl;
 
-import com.example.template.domain.member.entity.Member;
+import com.example.template.domain.station.dto.response.StationResponseDTO;
 import com.example.template.domain.station.entity.Station;
 import com.example.template.domain.station.enums.SortType;
 import com.example.template.domain.station.exception.StationErrorCode;
 import com.example.template.domain.station.exception.StationException;
-import com.example.template.domain.station.repository.FavoriteRepository;
 import com.example.template.domain.station.repository.StationRepository;
 import com.example.template.domain.station.service.StationQueryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,21 +23,23 @@ public class StationQueryServiceImpl implements StationQueryService {
     private final StationRepository stationRepository;
 
     @Override
-    public List<Station> getStations(String query, Long lastId, int offset, double latitude, double longitude) {
+    public StationResponseDTO.StationPreviewListDTO getStations(String query, Long lastId, int offset, double latitude, double longitude) {
         List<Station> stations;
         if (query.equalsIgnoreCase(SortType.DISTANCE.toString())) {
-            stations = lastId.equals(0L) ? stationRepository.findAllByOrderByDistance(latitude, longitude, offset).getContent()
-                    : stationRepository.findAllOrderByDistanceFromId(latitude, longitude, lastId, offset).getContent();
+            stations = lastId.equals(0L) ? stationRepository.findAllByOrderByDistance(latitude, longitude, offset + 1)
+                    : stationRepository.findAllOrderByDistanceFromId(latitude, longitude, lastId, offset + 1);
         }
         else if (query.equalsIgnoreCase(SortType.SCORE.toString())) {
-            stations = scorePagination(stationRepository.findAllByOrderByScoreDesc(), lastId, offset);
+            Pageable pageable = PageRequest.of(0, offset + 1);
+                stations = lastId.equals(0L) ? stationRepository.findAllByOrderByScoreDesc(pageable).getContent() :
+                        stationRepository.findAllByOrderByScoreDescFromId(lastId, offset + 1);
 
         }
         else {
             throw new StationException(StationErrorCode.QUERY_BAD_REQUEST);
         }
 
-        return stations;
+        return createStationPreviewList(stations, latitude, longitude, offset);
     }
 
     @Override
@@ -50,28 +52,13 @@ public class StationQueryServiceImpl implements StationQueryService {
         return stationRepository.findById(stationId).orElseThrow(() -> new StationException(StationErrorCode.NOT_FOUND));
     }
 
-    /**
-     * 별점순으로 정렬된 List를 무한스크롤 형식으로 페이지네이션하는 함수
-     * @param stations 별점순으로 정렬된 리스트
-     * @param lastId 마지막 충전소의 Id
-     * @param offset 가져올 개수
-     */
-    private List<Station> scorePagination(List<Station> stations, Long lastId, int offset) {
-        int start = 0;
-        int end = offset;
-        if (!lastId.equals(0L)) {
-            Optional<Station> found = stations.stream().filter(station -> station.getId().equals(lastId)).findFirst();
-            if (found.isPresent()) {
-                start = stations.indexOf(found.get()) + 1;
-                end = start + offset;
-            }
-            else {
-                throw new StationException(StationErrorCode.NOT_FOUND);
-            }
+    private StationResponseDTO.StationPreviewListDTO createStationPreviewList(List<Station> stations, double latitude, double longitude, int offset) {
+        boolean hasNext = stations.size() > offset;
+        Long lastId = null;
+        if (hasNext) {
+            stations = stations.subList(0, offset);
+            lastId = stations.get(stations.size() - 1).getId();
         }
-        if (end >= stations.size()) {
-            end = stations.size();
-        }
-        return stations.subList(start, end);
+        return StationResponseDTO.StationPreviewListDTO.of(stations, latitude, longitude, hasNext, lastId);
     }
 }

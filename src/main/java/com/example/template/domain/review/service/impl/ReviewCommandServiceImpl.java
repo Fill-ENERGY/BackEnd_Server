@@ -167,11 +167,7 @@ public class ReviewCommandServiceImpl implements ReviewCommandService {
         return review;
     }
 
-    @Override
-    public boolean isRecommended(Long reviewId, Member member) {
-        Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new ReviewException(ReviewErrorCode.NOT_FOUND));
-        return reviewRecommendRepository.existsByReviewIsAndMemberIs(review, member);
-    }
+
 
     @Override
     public List<ReviewImg> uploadImg(List<MultipartFile> images) {

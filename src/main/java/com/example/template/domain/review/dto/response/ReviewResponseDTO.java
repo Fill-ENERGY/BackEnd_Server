@@ -38,7 +38,6 @@ public class ReviewResponseDTO {
         private Long authorId;
         private String authorName;
         private boolean isRecommended;
-        private String username;
 
         public static ReviewPreviewDTO of(Review review, boolean isRecommended) {
             return ReviewPreviewDTO.builder()
@@ -51,6 +50,22 @@ public class ReviewResponseDTO {
                     .authorId(review.getMember().getId())
                     .authorName(review.getMember().getName())
                     .isRecommended(isRecommended)
+                    .build();
+        }
+    }
+
+    @Getter
+    @Builder
+    public static class ReviewPreviewListDTO {
+        private List<ReviewResponseDTO.ReviewPreviewDTO> reviews;
+        private boolean hasNext;
+        private Long lastId;
+
+        public static ReviewPreviewListDTO of(List<ReviewPreviewDTO> reviews, boolean hasNext, Long lastId) {
+            return ReviewPreviewListDTO.builder()
+                    .reviews(reviews)
+                    .hasNext(hasNext)
+                    .lastId(lastId)
                     .build();
         }
     }

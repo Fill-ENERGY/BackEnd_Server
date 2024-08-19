@@ -5,11 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-
 public class StationOpenApiResponse {
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_TIME;
 
     @Getter
     @Builder
@@ -74,12 +70,12 @@ public class StationOpenApiResponse {
                     .latitude(this.LATITUDE)
                     .longitude(this.LONGITUDE)
                     .score(0.0)
-                    .weekdayOpen(LocalTime.parse(this.WEEKDAYOPEROPENHHMM, FORMATTER))
-                    .weekdayClose(LocalTime.parse(this.WEEKDAYOPERCOLSEHHMM, FORMATTER))
-                    .saturdayOpen(LocalTime.parse(this.SATOPEROPEROPENHHMM, FORMATTER))
-                    .saturdayClose(LocalTime.parse(this.SATOPERCLOSEHHMM, FORMATTER))
-                    .holidayOpen(LocalTime.parse(this.HOLIDAYOPEROPENHHMM, FORMATTER))
-                    .holidayClose(LocalTime.parse(this.SATOPERCLOSEHHMM, FORMATTER))
+                    .weekdayOpen(this.WEEKDAYOPEROPENHHMM)
+                    .weekdayClose(this.WEEKDAYOPERCOLSEHHMM)
+                    .saturdayOpen(this.SATOPEROPEROPENHHMM)
+                    .saturdayClose(this.SATOPERCLOSEHHMM)
+                    .holidayOpen(this.HOLIDAYOPEROPENHHMM)
+                    .holidayClose(this.SATOPERCLOSEHHMM)
                     .concurrentUsageCount(this.SMTMUSECO)
                     .airInjectionAvailable(this.AIRINJECTORYN == 'Y')
                     .phoneChargingAvailable(this.MOBLPHONCHRSTNYN == 'Y')
