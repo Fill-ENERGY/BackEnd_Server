@@ -39,8 +39,7 @@ public class StationController {
                                                                           @RequestParam(value = "offset", defaultValue = "10") int offset,
                                                                           @RequestParam("latitude") double latitude,
                                                                           @RequestParam("longitude") double longitude) {
-        List<Station> stations = stationQueryService.getStations(query, lastId, offset, latitude, longitude);
-        return ApiResponse.onSuccess(StationResponseDTO.StationPreviewListDTO.of(stations, latitude, longitude));
+        return ApiResponse.onSuccess(stationQueryService.getStations(query, lastId, offset, latitude, longitude));
     }
 
 
@@ -91,7 +90,6 @@ public class StationController {
                                                                                        @RequestParam(value = "offset", defaultValue = "10") int offset,
                                                                                        @RequestParam("latitude") double latitude,
                                                                                        @RequestParam("longitude") double longitude) {
-        List<Station> stations = favoriteQueryService.getFavoritesByMember(member, query, latitude, longitude, lastId, offset);
-        return ApiResponse.onSuccess(StationResponseDTO.StationPreviewListDTO.of(stations, latitude, longitude));
+        return ApiResponse.onSuccess(favoriteQueryService.getFavoritesByMember(member, query, latitude, longitude, lastId, offset));
     }
 }

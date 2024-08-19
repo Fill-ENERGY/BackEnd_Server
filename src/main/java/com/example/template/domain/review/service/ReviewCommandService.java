@@ -13,6 +13,5 @@ public interface ReviewCommandService {
     Review updateReview(Long reviewId, ReviewRequestDTO.UpdateReviewRequestDTO request);
     Review deleteReview(Long reviewId);
     Review recommendReview(Member member, Long reviewId);
-    boolean isRecommended(Long reviewId, Member member);
     List<ReviewImg> uploadImg(List<MultipartFile> images);
 }

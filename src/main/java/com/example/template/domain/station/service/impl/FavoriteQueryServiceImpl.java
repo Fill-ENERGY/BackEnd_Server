@@ -1,6 +1,7 @@
 package com.example.template.domain.station.service.impl;
 
 import com.example.template.domain.member.entity.Member;
+import com.example.template.domain.station.dto.response.StationResponseDTO;
 import com.example.template.domain.station.entity.Favorite;
 import com.example.template.domain.station.entity.Station;
 import com.example.template.domain.station.enums.SortType;
@@ -28,10 +29,10 @@ public class FavoriteQueryServiceImpl implements FavoriteQueryService {
     private final StationRepository stationRepository;
 
     @Override
-    public List<Station> getFavoritesByMember(Member member, String query, double latitude, double longitude, Long lastId, int offset) {
+    public StationResponseDTO.StationPreviewListDTO getFavoritesByMember(Member member, String query, double latitude, double longitude, Long lastId, int offset) {
         List<Favorite> favorites;
         if (query.equalsIgnoreCase(SortType.RECENT.toString())) {
-            Pageable pageable = PageRequest.of(0, offset);
+            Pageable pageable = PageRequest.of(0, offset + 1);
             if (lastId.equals(0L)) {
                 favorites = favoriteRepository.findAllByMemberIsOrderByCreatedAtDesc(member, pageable);
             }
@@ -42,17 +43,25 @@ public class FavoriteQueryServiceImpl implements FavoriteQueryService {
             }
         }
         else if (query.equalsIgnoreCase(SortType.DISTANCE.toString())) {
-            favorites = lastId.equals(0L) ? favoriteRepository.findAllByMemberIsOrderByDistance(member.getId(), latitude, longitude, offset)
-                    : favoriteRepository.findAllByMemberIsAndFromLastIdOrderByDistance(member.getId(), latitude, longitude, lastId, offset);
+            favorites = lastId.equals(0L) ? favoriteRepository.findAllByMemberIsOrderByDistance(member.getId(), latitude, longitude, offset + 1)
+                    : favoriteRepository.findAllByMemberIsAndFromLastIdOrderByDistance(member.getId(), latitude, longitude, lastId, offset + 1);
         }
         else {
             throw new FavoriteException(FavoriteErrorCode.QUERY_BAD_REQUEST);
         }
-        return favorites.stream().map(Favorite::getStation).toList();
+        return createStationPreviewList(favorites.stream().map(Favorite::getStation).toList(), latitude, longitude, offset);
     }
 
     @Override
     public boolean isFavorite(Member member, Station station) {
         return favoriteRepository.existsByMemberIsAndStationIs(member, station);
+    }
+
+    private StationResponseDTO.StationPreviewListDTO createStationPreviewList(List<Station> stations, double latitude, double longitude, int offset) {
+        boolean hasNext = stations.size() > offset;
+        if (hasNext) {
+            stations = stations.subList(0, offset);
+        }
+        return StationResponseDTO.StationPreviewListDTO.of(stations, latitude, longitude, hasNext, stations.get(stations.size() - 1).getId());
     }
 }

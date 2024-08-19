@@ -50,17 +50,12 @@ public class ReviewController {
             @Parameter(name = "query", description = "SCORE: 별점순, RECENT: 최신순"),
             @Parameter(name = "lastId", description = "마지막으로 받은 평가의 id, 처음 가져올 때 -> 0")
     })
-    public ApiResponse<List<ReviewResponseDTO.ReviewPreviewDTO>> getReviewsOfStations(@AuthenticatedMember Member member,
+    public ApiResponse<ReviewResponseDTO.ReviewPreviewListDTO> getReviewsOfStations(@AuthenticatedMember Member member,
                                                                                       @PathVariable Long stationId,
                                                                                       @RequestParam(defaultValue = "0") Long lastId,
                                                                                       @RequestParam(defaultValue = "SCORE") String query,
                                                                                       @RequestParam(defaultValue = "10") int offset) {
-        List<Review> reviewList = reviewQueryService.getReviewsOfStations(stationId, lastId, query, offset);
-        return ApiResponse.onSuccess(reviewList
-                .stream()
-                .map(review -> ReviewResponseDTO.ReviewPreviewDTO.of(review, reviewCommandService.isRecommended(review.getId(), member)))
-                .toList()
-        );
+        return ApiResponse.onSuccess(reviewQueryService.getReviewsOfStations(member, stationId, lastId, query, offset));
     }
 
     @GetMapping("/my-reviews")
@@ -71,17 +66,12 @@ public class ReviewController {
             @Parameter(name = "offset", description = "가져올 충전소 개수, default = 10"),
             @Parameter(name = "only", description = "PHOTO: 사진만, NONE 혹은 안 넣기: 조건 없음")
     })
-    public ApiResponse<List<ReviewResponseDTO.ReviewPreviewDTO>> getReviewsOfUsers(@AuthenticatedMember Member member,
+    public ApiResponse<ReviewResponseDTO.ReviewPreviewListDTO> getReviewsOfUsers(@AuthenticatedMember Member member,
                                                                                    @RequestParam("query") String query,
                                                                                    @RequestParam("lastId") Long lastId,
                                                                                    @RequestParam(value = "offset", defaultValue = "10") int offset,
                                                                                    @RequestParam(value = "only", defaultValue = "none") String only) {
-        List<Review> reviewList = reviewQueryService.getReviewsOfUsers(member, query, lastId, offset, only);
-        return ApiResponse.onSuccess(reviewList
-                .stream()
-                .map(review -> ReviewResponseDTO.ReviewPreviewDTO.of(review, reviewCommandService.isRecommended(review.getId(), member)))
-                .toList()
-        );
+        return ApiResponse.onSuccess(reviewQueryService.getReviewsOfUsers(member, query, lastId, offset, only));
     }
 
     @GetMapping("/{reviewId}")
@@ -89,7 +79,7 @@ public class ReviewController {
     public ApiResponse<ReviewResponseDTO.ReviewPreviewDTO> getReview(@AuthenticatedMember Member member,
                                                                      @PathVariable Long reviewId) {
         Review review = reviewQueryService.getReview(reviewId);
-        return ApiResponse.onSuccess(ReviewResponseDTO.ReviewPreviewDTO.of(review, reviewCommandService.isRecommended(review.getId(), member)));
+        return ApiResponse.onSuccess(ReviewResponseDTO.ReviewPreviewDTO.of(review, reviewQueryService.isRecommended(review.getId(), member)));
     }
 
     @GetMapping("/keywords")
@@ -107,7 +97,7 @@ public class ReviewController {
         Review review = reviewCommandService.updateReview(reviewId, request);
         stationCommandService.updateScore(review.getStation().getId());
         return ApiResponse.onSuccess(
-                ReviewResponseDTO.ReviewPreviewDTO.of(review, reviewCommandService.isRecommended(review.getId(), member))
+                ReviewResponseDTO.ReviewPreviewDTO.of(review, reviewQueryService.isRecommended(review.getId(), member))
         );
     }
 

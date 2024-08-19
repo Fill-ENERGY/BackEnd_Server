@@ -56,6 +56,22 @@ public class ReviewResponseDTO {
 
     @Getter
     @Builder
+    public static class ReviewPreviewListDTO {
+        private List<ReviewResponseDTO.ReviewPreviewDTO> reviews;
+        private boolean hasNext;
+        private Long lastId;
+
+        public static ReviewPreviewListDTO of(List<ReviewPreviewDTO> reviews, boolean hasNext, Long lastId) {
+            return ReviewPreviewListDTO.builder()
+                    .reviews(reviews)
+                    .hasNext(hasNext)
+                    .lastId(lastId)
+                    .build();
+        }
+    }
+
+    @Getter
+    @Builder
     public static class KeywordDTO {
         private String name;
         private String content;

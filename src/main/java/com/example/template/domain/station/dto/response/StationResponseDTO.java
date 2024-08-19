@@ -29,6 +29,7 @@ public class StationResponseDTO {
         private String dayOfWeek;
         private String openTime;
         private String closeTime;
+        private String institutionPhone;
 
         public static StationPreviewDTO of(Station station, double latitude, double longitude) {
             String dayOfWeek  = LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.KOREA);
@@ -59,6 +60,7 @@ public class StationResponseDTO {
                     .longitude(station.getLongitude())
                     .openTime(openTime)
                     .closeTime(closeTime)
+                    .institutionPhone(station.getInstitutionPhone())
                     .build();
         }
     }
@@ -68,10 +70,15 @@ public class StationResponseDTO {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class StationPreviewListDTO {
-        private List<StationPreviewDTO> stationPreviewDTOList;
-        public static StationPreviewListDTO of(List<Station> stations, double latitude, double longitude) {
+        private List<StationPreviewDTO> stations;
+        private Long lastId;
+        private boolean hasNext;
+
+        public static StationPreviewListDTO of(List<Station> stations, double latitude, double longitude, boolean hasNext, Long lastId) {
             return StationPreviewListDTO.builder()
-                    .stationPreviewDTOList(stations.stream().map(station -> StationPreviewDTO.of(station, latitude, longitude)).toList())
+                    .stations(stations.stream().map(station -> StationPreviewDTO.of(station, latitude, longitude)).toList())
+                    .hasNext(hasNext)
+                    .lastId(lastId)
                     .build();
         }
     }
