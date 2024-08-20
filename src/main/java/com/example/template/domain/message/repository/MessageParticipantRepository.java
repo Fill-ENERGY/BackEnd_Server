@@ -22,11 +22,11 @@ public interface MessageParticipantRepository extends JpaRepository<MessageParti
     @Query("SELECT mp FROM MessageParticipant mp " +
             "WHERE mp.member = :member " +
             "AND mp.participationStatus = :status " +
-            "AND mp.messageThread.updatedAt < :cursor " +
-            "AND mp.messageThread.id < :lastId " +
+            "AND (mp.messageThread.updatedAt < :cursor " +
+            "OR (mp.messageThread.updatedAt = :cursor AND mp.messageThread.id < :lastId)) " +
             "AND mp.messageThread.id NOT IN (SELECT mt.id FROM MessageThread mt " +
             "JOIN mt.participants p WHERE p.member IN :blockedMembers) " +
-            "ORDER BY mp.messageThread.updatedAt DESC")
+            "ORDER BY mp.messageThread.updatedAt DESC, mp.messageThread.id DESC")
     List<MessageParticipant> findByMemberAndParticipationStatusWithCursor(
             @Param("member") Member member,
             @Param("status") ParticipationStatus status,

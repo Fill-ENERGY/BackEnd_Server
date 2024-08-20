@@ -21,6 +21,7 @@ public class Message extends BaseEntity {
     @Column(name = "message_id", nullable = false)
     private Long id;
 
+    @Lob
     private String content; // 내용
 
     @Enumerated(EnumType.STRING)

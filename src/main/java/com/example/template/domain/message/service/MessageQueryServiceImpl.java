@@ -48,10 +48,15 @@ public class MessageQueryServiceImpl implements MessageQueryService {
 
         // 차단한 멤버를 제외한 참여 중인 채팅방 목록 조회 (커서 기반 쿼리 사용)
         List<MessageParticipant> participantList = messageParticipantRepository.findByMemberAndParticipationStatusWithCursor(
-                member, ParticipationStatus.ACTIVE, blockedMembers, cursor, lastId, PageRequest.of(0, limit)
+                member, ParticipationStatus.ACTIVE, blockedMembers, cursor, lastId, PageRequest.of(0, limit + 1)
         );
 
         List<MessageResponseDTO.ThreadDetailListDTO> threadDetailListDTOS = new ArrayList<>();
+
+        boolean hasNext = participantList.size() > limit;
+        if (hasNext) {
+            participantList = participantList.subList(0, limit);
+        }
 
         for (MessageParticipant participant : participantList) {
             MessageThread thread = participant.getMessageThread();
@@ -77,7 +82,6 @@ public class MessageQueryServiceImpl implements MessageQueryService {
         // 다음 페이지 커서 설정
         LocalDateTime nextCursor = threadDetailListDTOS.isEmpty() ? null : threadDetailListDTOS.get(threadDetailListDTOS.size() - 1).getUpdatedAt();
         Long nextId = threadDetailListDTOS.isEmpty() ? null : threadDetailListDTOS.get(threadDetailListDTOS.size() - 1).getThreadId();
-        boolean hasNext = threadDetailListDTOS.size() == limit;
 
         return MessageResponseDTO.ThreadListDTO.of(threadDetailListDTOS, nextCursor, nextId, hasNext);
     }
@@ -122,10 +126,14 @@ public class MessageQueryServiceImpl implements MessageQueryService {
 
         // leftAt 이후의 쪽지만 조회
         List<Message> messages = messageRepository.findMessagesByMessageThreadAndMemberAndLeftAtAfterWithCursor(
-                cursor, limit, messageThread, member, messageParticipant.getLeftAt());
+                cursor, limit + 1, messageThread, member, messageParticipant.getLeftAt());
 
-        Long nextCursor = messages.isEmpty() ? null : messages.get(messages.size() - 1).getId();
-        boolean hasNext = messages.size() == limit;
+        boolean hasNext = messages.size() > limit;
+        if (hasNext) {
+            messages = messages.subList(0, limit);
+        }
+
+        Long nextCursor = hasNext ? messages.get(messages.size() - 1).getId() : null;
 
         return MessageResponseDTO.MessageListDTO.from(messageThread, otherParticipant, messages, nextCursor, hasNext);
     }

@@ -24,13 +24,15 @@ public class BlockQueryServiceImpl implements BlockQueryService{
             cursor = Long.MAX_VALUE;
         }
 
-        List<Block> blocks = blockRepository.findByMemberWithCursor(cursor, limit, member);
+        List<Block> blocks = blockRepository.findByMemberWithCursor(cursor, limit + 1, member);
+
+        boolean hasNext = blocks.size() > limit;
+        if (hasNext) {
+            blocks = blocks.subList(0, limit);
+        }
 
         Long nextCursor = blocks.isEmpty() ? null : blocks.get(blocks.size() - 1).getId();
-        boolean hasNext = blocks.size() == limit;
-
 
         return BlockResponseDTO.BlockListDTO.of(blocks, nextCursor, hasNext);
-
     }
 }
