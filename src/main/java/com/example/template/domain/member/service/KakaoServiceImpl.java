@@ -154,4 +154,60 @@ public class KakaoServiceImpl implements KakaoService{
                             .build();
                 });
     }
+
+    @Override
+    public MemberResponseDTO.LoginResultDTO androidKakao(String accessToken) {
+        // 카카오 프로필 가져오기
+        KakaoProfile kakaoProfile = getKakaoProfile(accessToken);
+
+        if (kakaoProfile == null) {
+            throw new MemberException(MemberErrorCode.MEMBER_NOT_FOUND);
+        }
+
+        String kakaoEmail = kakaoProfile.getKakao_account().getEmail();
+        if (kakaoEmail == null) {
+            kakaoUnlink(accessToken);
+            throw new MemberException(MemberErrorCode.EMAIL_NOT_EXIST);
+        }
+
+        // 회원 정보 존재 여부 확인
+        return memberRepository.findByEmailAndProvider(kakaoEmail, ProviderType.KAKAO)
+                .map(member -> {
+                    // 로그인 처리
+                    PrincipalDetails userDetails = new PrincipalDetails(member);
+                    String jwtAccessToken = jwtProvider.createJwtAccessToken(userDetails);
+                    String jwtRefreshToken = jwtProvider.createJwtRefreshToken(userDetails);
+
+                    return MemberResponseDTO.LoginResultDTO.builder()
+                            .userId(member.getId())
+                            .createdAt(LocalDateTime.now())
+                            .accessToken(jwtAccessToken)
+                            .refreshToken(jwtRefreshToken)
+                            .build();
+                })
+                .orElseGet(() -> {
+                    // 회원가입 처리 후 로그인 처리
+                    MemberRequestDTO.SignupDTO signupRequestDto = MemberRequestDTO.SignupDTO.builder()
+                            .email(kakaoEmail)
+                            .name(kakaoProfile.getProperties().getNickname())
+                            .provider(ProviderType.KAKAO)
+                            .build();
+
+                    memberService.socialSignup(signupRequestDto);
+
+                    Member member = memberRepository.findByEmailAndProvider(kakaoEmail, ProviderType.KAKAO)
+                            .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+                    PrincipalDetails userDetails = new PrincipalDetails(member);
+                    String jwtAccessToken = jwtProvider.createJwtAccessToken(userDetails);
+                    String jwtRefreshToken = jwtProvider.createJwtRefreshToken(userDetails);
+
+                    return MemberResponseDTO.LoginResultDTO.builder()
+                            .userId(member.getId())
+                            .createdAt(LocalDateTime.now())
+                            .accessToken(jwtAccessToken)
+                            .refreshToken(jwtRefreshToken)
+                            .build();
+                });
+    }
 }
