@@ -4,7 +4,10 @@ import com.example.template.domain.member.dto.MemberRequestDTO;
 import com.example.template.domain.member.dto.MemberResponseDTO;
 import com.example.template.domain.member.dto.SocialRequestDTO;
 import com.example.template.domain.member.entity.Member;
+import com.example.template.domain.member.exception.MemberErrorCode;
+import com.example.template.domain.member.exception.MemberException;
 import com.example.template.domain.member.jwt.dto.JwtDTO;
+import com.example.template.domain.member.jwt.exception.SecurityCustomException;
 import com.example.template.domain.member.service.KakaoService;
 import com.example.template.domain.member.service.MemberService;
 import com.example.template.global.annotation.AuthenticatedMember;
@@ -45,6 +48,22 @@ public class MemberController {
     @PostMapping("/social/loginorsignup/kakao")
     public ApiResponse<MemberResponseDTO.LoginResultDTO> loginOrSignupByKakao(@Valid @RequestBody SocialRequestDTO.LoginDTO requestDTO) {
         return ApiResponse.onSuccess(kakaoService.loginOrSignupByKakao(requestDTO));
+    }
+
+    @Operation(summary = "카카오 로그인 및 회원가입_SDK", description = "카카오 accessToken을 헤더로 받아 로그인 또는 회원가입을 처리합니다. " +
+            "반환 값으로 JWT accessToken과 refreshToken이 발급되며, accessToken 값을 Authorize에 인증")
+    @PostMapping("/social/oauth/kakao")
+    public ApiResponse<MemberResponseDTO.LoginResultDTO> androidKakao(
+            @RequestHeader("Authorization") String authorizationHeader) {
+
+        // Authorization 헤더에서 Bearer 토큰 추출
+        if (authorizationHeader != null) {
+            String accessToken = authorizationHeader;
+            // 카카오 서비스 호출하여 로그인 또는 회원가입 처리
+            return ApiResponse.onSuccess(kakaoService.androidKakao(accessToken));
+        } else {
+            throw new MemberException(MemberErrorCode._INTERNAL_SERVER_ERROR);
+        }
     }
 
     @Operation(summary = "로그아웃")

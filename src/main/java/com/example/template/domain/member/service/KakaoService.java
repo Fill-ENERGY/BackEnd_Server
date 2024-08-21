@@ -11,4 +11,6 @@ public interface KakaoService {
     void kakaoUnlink(String accessToken);
 
     MemberResponseDTO.LoginResultDTO loginOrSignupByKakao(SocialRequestDTO.LoginDTO requestDTO);
+
+    MemberResponseDTO.LoginResultDTO androidKakao(String accessToken);
 }
