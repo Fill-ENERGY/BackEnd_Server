@@ -11,6 +11,7 @@ import com.example.template.domain.board.repository.BoardRepository;
 import com.example.template.domain.member.entity.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,10 @@ public class BoardQueryServiceImpl implements BoardQueryService {
         cursor = initializeCursor(cursor);
         List<Board> boards = fetchBoards(category, cursor, limit, sortType);
         return createBoardListDTO(boards, limit, member);
+    }
+
+    private Long initializeCursor(Long cursor) {
+        return (cursor == null || cursor == 0) ? Long.MAX_VALUE : cursor;
     }
 
     @Override
@@ -67,23 +72,25 @@ public class BoardQueryServiceImpl implements BoardQueryService {
         return createBoardListDTO(boards, limit, member);
     }
 
-    private Long initializeCursor(Long cursor) {
-        return (cursor == 0) ? Long.MAX_VALUE : cursor;
-    }
-
     private List<Board> fetchBoards(Category category, Long cursor, Integer limit, SortType sortType) {
-        PageRequest pageRequest = PageRequest.of(0, limit + 1);
+        Pageable pageable = PageRequest.of(0, limit + 1); // 커서 페이지네이션을 사용하는 대신 기본적으로 `limit + 1`로 설정
+
         if (category == null) {
             if (sortType == SortType.LIKES) {
-                return boardRepository.findAllOrderByLikesWithCursor(cursor, pageRequest);
+                return (cursor == Long.MAX_VALUE)
+                        ? boardRepository.findAllOrderByLikesFirstPage(pageable) // 첫 페이지 조회
+                        : boardRepository.findAllOrderByLikesWithCursor(cursor, limit + 1); // 이후 페이지 조회
             } else {
-                return boardRepository.findAllOrderByLatestWithCursor(cursor, pageRequest);
+                return boardRepository.findAllOrderByLatestWithCursor(cursor, pageable);
             }
         } else {
             if (sortType == SortType.LIKES) {
-                return boardRepository.findByCategoryOrderByLikesWithCursor(category, cursor, pageRequest);
+                return (cursor == Long.MAX_VALUE)
+                        ? boardRepository.findByCategoryOrderByLikesFirstPage(category, pageable) // 카테고리별 첫 페이지 조회
+                        : boardRepository.findByCategoryOrderByLikesWithCursor(category, cursor, limit + 1); // 이후 페이지 조회
             } else {
-                return boardRepository.findByCategoryOrderByLatestWithCursor(category, cursor, pageRequest);
+                // 카테고리별 최신순 첫 페이지 조회
+                return boardRepository.findByCategoryOrderByLatestWithCursor(category, cursor, pageable); // 이후 페이지 조회
             }
         }
     }

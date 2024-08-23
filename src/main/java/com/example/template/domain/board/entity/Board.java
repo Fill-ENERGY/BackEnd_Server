@@ -30,7 +30,7 @@ public class Board extends BaseEntity {
     private String content;   // 내용
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "category", nullable = false)
     private Category category;     // 카테고리
 
     @Enumerated(EnumType.STRING)
