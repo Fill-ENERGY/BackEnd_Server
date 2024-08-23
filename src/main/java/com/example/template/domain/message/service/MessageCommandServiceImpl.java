@@ -117,7 +117,7 @@ public class MessageCommandServiceImpl implements MessageCommandService {
     }
 
     private MessageThread getOrCreateMessageThread(Long threadId, Member sender, Member receiver) {
-        if (threadId != null) { // 채팅방이 존재하는 경우
+        if (threadId != 0L) { // 채팅방이 존재하는 경우
             MessageThread messageThread = messageThreadRepository.findById(threadId)
                     .orElseThrow(() -> new MessageException(MessageErrorCode.THREAD_NOT_FOUND));
 
