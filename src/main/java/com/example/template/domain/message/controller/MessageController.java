@@ -42,7 +42,7 @@ public class MessageController {
     }
 
     @PostMapping(value = "/messages")
-    @Operation(summary = "쪽지 전송", description = "쪽지를 전송합니다. threadId가 없는 경우(첫 쪽지인 경우) 해당 필드만 제외하고 전송해주세요.\n\n" +
+    @Operation(summary = "쪽지 전송", description = "쪽지를 전송합니다. 첫 쪽지인 경우 threadId로 0을 전달해주세요.\n\n" +
             "이미지를 전송하는 경우, 쪽지 이미지 업로드 api의 응답 결과를 images 필드에 담아 전송해주세요.")
     public ApiResponse<MessageResponseDTO.MessageDTO> createMessage(@Valid @RequestBody MessageRequestDTO.CreateMessageDTO requestDTO,
                                                                     @AuthenticatedMember Member member) {
