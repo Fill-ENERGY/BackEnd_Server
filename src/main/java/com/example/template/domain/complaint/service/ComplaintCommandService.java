@@ -10,5 +10,5 @@ import java.util.List;
 public interface ComplaintCommandService {
     ComplaintResponseDTO.ComplaintImgDTO uploadImages(List<MultipartFile> images);
 
-    ComplaintResponseDTO.ComplaintDTO createComplaint(Member member, ComplaintRequestDTO.CreateComplaintDTO createComplaintDTO);
+    ComplaintResponseDTO.ComplaintDetailDTO createComplaint(Member member, ComplaintRequestDTO.CreateComplaintDTO createComplaintDTO);
 }
